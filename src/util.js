@@ -6,20 +6,6 @@ const QUERY_SEPERATOR = "?";
 const FILE_SEPERATOR = ".";
 const EXTERNAL_KEYS = [ "http", "https" ];
 
-
-const url = {
-	url: "",
-	path: [],
-	name: "",
-	extension: "",
-	isFile: false,
-	isExternal: false,
-	isRelative: false,
-	isHtml: false,
-	isJavaScript: false,
-	isCss: false
-}
-
 function combined(orgUrl) {
 	const split = getUrl(orgUrl);
 	const url = split[0];
