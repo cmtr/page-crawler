@@ -12,7 +12,7 @@ const {
 	isHtml, 
 	isCss, 
 	isJavaScript 
-} = require("../src/util");
+} = require("../src/url");
 
 
 // HTML
@@ -42,17 +42,19 @@ const EXTERNAL_PAGE_TEST_STRING_3 = "https://test.com/subfoler1/subfolder1-1/pag
 const EXTERNAL_PAGE_TEST_STRING_4 = "HTTPS://test.com/subfoler1/subfolder1-1/page1-1-1";
 const EXTERNAL_PAGE_TEST_STRING_5 = "HTTPS://test.com/subfoler1/subfolder1-1/page1-1-1.html#someSection";
 
+const ROOT_URL = "localhost:4000";
+
 describe("combined", () => {
 
 	it("PAGE_TEST_STRING_1", () => {
-		const url = combined(PAGE_TEST_STRING_1);
+		const url = combined(ROOT_URL, PAGE_TEST_STRING_1);
 		url.url.should.equal(PAGE_TEST_STRING_1);
 		url.extension.should.have.lengthOf(0);
 		url.path[0].should.equal("subfolder1");
 		url.path[1].should.equal("subfolder1-1");
 		url.fileName.should.equal("page1-1-1");
 		url.fileExtension.should.have.lengthOf(0);
-		url.rootUrl.should.have.lengthOf(0);
+		url.rootUrl.should.equal(ROOT_URL);
 		url.isPage.should.be.true;
 		url.isFile.should.be.false;
 		url.isHtml.should.be.false;
@@ -63,13 +65,14 @@ describe("combined", () => {
 	});
 
 	it("PAGE_TEST_STRING_4", () => {
-		const url = combined(PAGE_TEST_STRING_4);
+		const url = combined(ROOT_URL, PAGE_TEST_STRING_4);
 		url.url.should.equal("/subfolder1/subfolder1-1/page1-1-1");
 		url.extension.should.equal("#someSection");
 		url.path[0].should.equal("subfolder1");
 		url.path[1].should.equal("subfolder1-1");
 		url.fileName.should.equal("page1-1-1");
 		url.fileExtension.should.have.lengthOf(0);
+		url.rootUrl.should.equal(ROOT_URL);
 		url.isPage.should.be.true;
 		url.isFile.should.be.false;
 		url.isHtml.should.be.false;
@@ -80,14 +83,14 @@ describe("combined", () => {
 	});
 
 	it("HTML_TEST_STRING_3", () => {
-		const url = combined(HTML_TEST_STRING_3);
+		const url = combined(ROOT_URL, HTML_TEST_STRING_3);
 		url.url.should.equal("/subfoler1/subfolder1-1/page1-1-1.html");
 		url.extension.should.equal("#someSection");
 		url.path[0].should.equal("subfoler1");
 		url.path[1].should.equal("subfolder1-1");
 		url.fileName.should.equal("page1-1-1");
 		url.fileExtension.should.equal("html");
-		url.rootUrl.should.have.lengthOf(0);
+		url.rootUrl.should.equal(ROOT_URL);
 		url.isPage.should.be.true;
 		url.isFile.should.be.true;
 		url.isHtml.should.be.true;
@@ -98,7 +101,7 @@ describe("combined", () => {
 	});
 
 	it("EXTERNAL_PAGE_TEST_STRING_5", () => {
-		const url = combined(EXTERNAL_PAGE_TEST_STRING_5);
+		const url = combined(ROOT_URL, EXTERNAL_PAGE_TEST_STRING_5);
 		url.url.should.equal("https://test.com/subfoler1/subfolder1-1/page1-1-1.html");
 		url.extension.should.equal("#someSection");
 		url.path[0].should.equal("subfoler1");
@@ -113,7 +116,6 @@ describe("combined", () => {
 		url.isCss.should.be.false;
 		url.isExternal.should.be.true;
 		url.isRelative.should.be.false;
-		console.log(url);
 	});
 
 });
@@ -291,6 +293,7 @@ describe("isHtml", () => {
 
 	it("Not html", () => {
 		isHtml(CSS_TEST_STRING_2).should.be.false;
+		isHtml("").should.be.false;
 	});
 
 });

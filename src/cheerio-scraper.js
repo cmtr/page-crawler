@@ -1,14 +1,14 @@
 const axios = require("axios");
 const cheerio = require("cheerio");
 const { writeFile } = require("./fs-cheerio");
-const { combined } = require("util");
+const { combined } = require("./url");
 
 
-function saveLoadPage(urlObj, modify=e => e, fsOptions) {
+function saveLoadPage(rootDirectory, urlObj, modify=e => e, fsOptions) {
 	return axios.get(getUrl(urlObj))
 		.then(page => cheerio.load(page))
 		.then(modify)
-		.then(saveToFile(url, fsOptions));
+		.then(saveToFile(rootDirectory, url, fsOptions));
 }
 
 
@@ -17,7 +17,7 @@ function getUrl(url) {
 	return url.rootUrl + "/" + url.url;
 }
 
-function saveToFile(url, fsOptions) {
+function saveToFile(rootDirectory, url, fsOptions) {
 	const fileName = "todo"
 	return function($) {
 		return writeFile(fileName, $, fsOptions);
@@ -25,6 +25,4 @@ function saveToFile(url, fsOptions) {
 }
 
 
-module.exports = {
-	saveToFile, saveLoadPage, getUrl
-}
+module.exports = saveToFile;
