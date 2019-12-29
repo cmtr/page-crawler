@@ -14,13 +14,14 @@ function saveLoadPage(rootDirectory, urlObj, modify=e => e, fsOptions) {
 
 function getUrl(url) {
 	// TODO - SOme logic here
-	return url.rootUrl + "/" + url.url;
+	return "http://" + url.rootUrl + "/" + url.url;
 }
 
-function saveToFile(rootDirectory, url, fsOptions) {
+function saveToFile(rootDirectory, url, fsOptions, urls) {
 	const fileName = "todo"
 	return function($) {
-		return writeFile(fileName, $, fsOptions);
+		return writeFile(fileName, $, fsOptions)
+			.then(success =>);
 	}
 }
 

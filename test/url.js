@@ -1,323 +1,239 @@
 const chai = require("chai");
+const { expect } = chai; 
 chai.should();
-const { 
-	combined,
-	getUrl, 
-	splitUrl, 
-	isExternal, 
-	isRelative, 
-	isFile, 
-	getFileName, 
-	getFileExtension, 
-	isHtml, 
-	isCss, 
-	isJavaScript 
-} = require("../src/url");
+
+const Url = require("../src/url");
+
+const EXTERNAL_PAGE_TEST_STRING_1 = "HTTPS://test.com/subfolder1/subfolder1-1/page1-1-1?v=123#someSection";
+
+const EXTERNAL_PAGE_TEST_STRING_1_RESULT = {
+	isHttps: true,
+	rootUrl: "test.com",
+	path: [ "subfolder1", "subfolder1-1" ],
+	hasQuery: true,
+	query: "v=123",
+	hasHash: true,
+	hash: "someSection",
+	oldRoute: "/subfolder1/subfolder1-1/page1-1-1?v=123#someSection",
+	newRoute: "/subfolder1/subfolder1-1/page1-1-1@v=123.html#someSection",
+	oldFileName: "page1-1-1",
+	fileName: "page1-1-1@v=123",
+	fileExtension: "html",
+	file: "page1-1-1@v=123.html"
+}
 
 
-// HTML
-const PAGE_TEST_STRING_1 = "/subfolder1/subfolder1-1/page1-1-1";
-const PAGE_TEST_STRING_2 = "subfolder1-1/page1-1-1";
-const PAGE_TEST_STRING_3 = "#someSection";
-const PAGE_TEST_STRING_4 = "/subfolder1/subfolder1-1/page1-1-1#someSection";
+describe("getFullUrl", () => {
 
-const HTML_TEST_STRING_1 = "/subfoler1/subfolder1-1/page1-1-1.html";
-const HTML_TEST_STRING_2 = "/subfoler1/subfolder1-1/page1-1-1.HTML";
-const HTML_TEST_STRING_3 = "/subfoler1/subfolder1-1/page1-1-1.html#someSection";
+	const getFullUrl= Url.getFullUrl;
 
-
-// JS
-const JS_TEST_STRING_1 = "/subfoler1/subfolder1-1/main.js";
-const JS_TEST_STRING_2 = "/subfoler1/subfolder1-1/main.JS";
-
-// CSS
-const CSS_TEST_STRING_1 = "/subfoler1/subfolder1-1/main.css";
-const CSS_TEST_STRING_2 = "/subfoler1/subfolder1-1/main.CSS";
-
-// External
-
-const EXTERNAL_PAGE_TEST_STRING_1 = "http://test.com/subfoler1/subfolder1-1/page1-1-1";
-const EXTERNAL_PAGE_TEST_STRING_2 = "HTTP://test.com/subfoler1/subfolder1-1/page1-1-1";
-const EXTERNAL_PAGE_TEST_STRING_3 = "https://test.com/subfoler1/subfolder1-1/page1-1-1";
-const EXTERNAL_PAGE_TEST_STRING_4 = "HTTPS://test.com/subfoler1/subfolder1-1/page1-1-1";
-const EXTERNAL_PAGE_TEST_STRING_5 = "HTTPS://test.com/subfoler1/subfolder1-1/page1-1-1.html#someSection";
-
-const ROOT_URL = "localhost:4000";
-
-describe("combined", () => {
-
-	it("PAGE_TEST_STRING_1", () => {
-		const url = combined(ROOT_URL, PAGE_TEST_STRING_1);
-		url.url.should.equal(PAGE_TEST_STRING_1);
-		url.extension.should.have.lengthOf(0);
-		url.path[0].should.equal("subfolder1");
-		url.path[1].should.equal("subfolder1-1");
-		url.fileName.should.equal("page1-1-1");
-		url.fileExtension.should.have.lengthOf(0);
-		url.rootUrl.should.equal(ROOT_URL);
-		url.isPage.should.be.true;
-		url.isFile.should.be.false;
-		url.isHtml.should.be.false;
-		url.isJavaScript.should.be.false;
-		url.isCss.should.be.false;
-		url.isExternal.should.be.false;
-		url.isRelative.should.be.false;
+	it("All variables", () => {
+		getFullUrl("http", "test.com", "blog/page", "v=123", "section").should.equal("http://test.com/blog/page?v=123#section");
+		getFullUrl("http", "test.com", "/blog/page", "v=123", "section").should.equal("http://test.com/blog/page?v=123#section");
+		getFullUrl("http", "test.com/", "blog/page", "v=123", "section").should.equal("http://test.com/blog/page?v=123#section");
 	});
 
-	it("PAGE_TEST_STRING_4", () => {
-		const url = combined(ROOT_URL, PAGE_TEST_STRING_4);
-		url.url.should.equal("/subfolder1/subfolder1-1/page1-1-1");
-		url.extension.should.equal("#someSection");
-		url.path[0].should.equal("subfolder1");
-		url.path[1].should.equal("subfolder1-1");
-		url.fileName.should.equal("page1-1-1");
-		url.fileExtension.should.have.lengthOf(0);
-		url.rootUrl.should.equal(ROOT_URL);
-		url.isPage.should.be.true;
-		url.isFile.should.be.false;
-		url.isHtml.should.be.false;
-		url.isJavaScript.should.be.false;
-		url.isCss.should.be.false;
-		url.isExternal.should.be.false;
-		url.isRelative.should.be.false;
+	it("All variables", () => {
+		getFullUrl("http", "test.com", "blog/page").should.equal("http://test.com/blog/page");
+		getFullUrl("http", "test.com", "/blog/page", undefined, "section").should.equal("http://test.com/blog/page#section");
+		getFullUrl("http", "test.com/", "blog/page", "v=123").should.equal("http://test.com/blog/page?v=123");
 	});
 
-	it("HTML_TEST_STRING_3", () => {
-		const url = combined(ROOT_URL, HTML_TEST_STRING_3);
-		url.url.should.equal("/subfoler1/subfolder1-1/page1-1-1.html");
-		url.extension.should.equal("#someSection");
-		url.path[0].should.equal("subfoler1");
-		url.path[1].should.equal("subfolder1-1");
-		url.fileName.should.equal("page1-1-1");
-		url.fileExtension.should.equal("html");
-		url.rootUrl.should.equal(ROOT_URL);
-		url.isPage.should.be.true;
-		url.isFile.should.be.true;
-		url.isHtml.should.be.true;
-		url.isJavaScript.should.be.false;
-		url.isCss.should.be.false;
-		url.isExternal.should.be.false;
-		url.isRelative.should.be.false;
-	});
+	it("Expect non-string to throw", () => {
 
-	it("EXTERNAL_PAGE_TEST_STRING_5", () => {
-		const url = combined(ROOT_URL, EXTERNAL_PAGE_TEST_STRING_5);
-		url.url.should.equal("https://test.com/subfoler1/subfolder1-1/page1-1-1.html");
-		url.extension.should.equal("#someSection");
-		url.path[0].should.equal("subfoler1");
-		url.path[1].should.equal("subfolder1-1");
-		url.fileName.should.equal("page1-1-1");
-		url.fileExtension.should.equal("html");
-		url.rootUrl.should.equal("test.com");
-		url.isPage.should.be.true;
-		url.isFile.should.be.true;
-		url.isHtml.should.be.true;
-		url.isJavaScript.should.be.false;
-		url.isCss.should.be.false;
-		url.isExternal.should.be.true;
-		url.isRelative.should.be.false;
 	});
 
 });
+
+describe("getProtocol", () => {
+
+	const getProtocol = Url.getProtocol;
+
+	it("Expect upper case to be lower case", () => {
+		getProtocol("HTTPS://").should.equal("https");
+	});
+
+	it("Expect empty string without protocol", () => {
+		getProtocol("/test/test").should.have.lengthOf(0);
+		getProtocol("/test/test").should.equal("");
+	});
+
+	it("Expect non-string to throw", () => {
+		expect(getProtocol.bind({}, {})).to.throw();
+		expect(getProtocol.bind({}, 1)).to.throw();
+		expect(getProtocol.bind({}, ["asd",":"])).to.throw();
+		expect(getProtocol.bind({}, [":"])).to.throw();
+	});
+
+})
 
 describe("getUrl", () => {
 
-	it("PAGE_TEST_STRING_1", () => {
-		const arr = getUrl(PAGE_TEST_STRING_1);
-		arr[0].should.equal(PAGE_TEST_STRING_1);
-		arr[1].should.have.lengthOf(0);
-		arr.should.have.lengthOf(2);
+	const getUrl = Url.getUrl;
+
+	it("Local routing", () => {
+		getUrl("/page/page.test.html?v=234#afg.sdf").should.equal("/page/page.test.html");
 	});
 
-	it("PAGE_TEST_STRING_3", () => {
-		const arr = getUrl(PAGE_TEST_STRING_3);
-		arr[0].should.have.lengthOf(0);
-		arr[1].should.equal(PAGE_TEST_STRING_3);
-		arr.should.have.lengthOf(2);
+	it("External routing", () => {
+		getUrl("http://test.com/page/page.test.html?v=234#afg.sdf").should.equal("http://test.com/page/page.test.html");
 	});
 
-	it("PAGE_TEST_STRING_4", () => {
-		const arr = getUrl(PAGE_TEST_STRING_4);
-		arr[0].should.equal("/subfolder1/subfolder1-1/page1-1-1");
-		arr[1].should.equal("#someSection");
-		arr.should.have.lengthOf(2);
+	it("External routing - Lower case", () => {
+		getUrl("http://test.com/PAGE/page.test.html?v=234#afg.sdf").should.equal("http://test.com/page/page.test.html");
+	});
+
+	it("Expect non-string to throw", () => {
+		expect(getUrl.bind({}, {})).to.throw();
+		expect(getUrl.bind({}, 1)).to.throw();
+		expect(getUrl.bind({}, ["asd",":"])).to.throw();
+		expect(getUrl.bind({}, [":"])).to.throw();
+	});
+
+
+});
+
+describe("getHost", () => {
+
+	const getHost = Url.getHost;
+
+
+	it("Local routing", () => {
+		getHost("/page/page.test.html?v=234#afg.sdf").should.equal("");
+	});
+
+	it("External routing", () => {
+		getHost("http://test.com/page/page.test.html?v=234#afg.sdf").should.equal("test.com");
+	});
+
+	it("Expect non-string to throw", () => {
+		expect(getHost.bind({}, {})).to.throw();
+		expect(getHost.bind({}, 1)).to.throw();
+		expect(getHost.bind({}, ["asd",":"])).to.throw();
+		expect(getHost.bind({}, [":"])).to.throw();
 	});
 
 });
 
-describe("splitUrl", () => {
+describe("getRoute", () => {
 
-	it("Empty string", () => {
-		const arr = splitUrl("");
-		arr.should.have.lengthOf(0);
+	const getRoute = Url.getRoute;
+
+	it("Local routing", () => {
+		getRoute("/page/page.test.html?v=234#afg.sdf").should.equal("page/page.test.html");
 	});
 
-	it("PAGE_TEST_STRING_1", () => {
-		const arr = splitUrl(PAGE_TEST_STRING_1)
-		arr.should.have.lengthOf(3);
-		arr[0].should.equal("subfolder1");
-		arr[1].should.equal("subfolder1-1");
-		arr[2].should.equal("page1-1-1");
+	it("External routing", () => {
+		getRoute("http://test.com/page/page.test.html?v=234#afg.sdf").should.equal("page/page.test.html");
 	});
 
-	it("PAGE_TEST_STRING_2", () => {
-		const arr = splitUrl(PAGE_TEST_STRING_2)
-		arr.should.have.lengthOf(2);
-		arr[0].should.equal("subfolder1-1");
-		arr[1].should.equal("page1-1-1");
+	it("External routing", () => {
+		getRoute("http://test.com/page/page/").should.equal("page/page");
+	});
+
+	it("Expect non-string to throw", () => {
+		expect(getRoute.bind({}, {})).to.throw();
+		expect(getRoute.bind({}, 1)).to.throw();
+		expect(getRoute.bind({}, ["asd",":"])).to.throw();
+		expect(getRoute.bind({}, [":"])).to.throw();
+	});
+
+
+});
+
+
+describe("getQuery", () => {
+
+	const getQuery = Url.getQuery;
+
+	it("Local routing", () => {
+		getQuery("/page/page.test.html?v=234#afg.sdf").should.equal("v=234");
+	});
+
+	it("Expect non-string to throw", () => {
+		expect(getQuery.bind({}, {})).to.throw();
+		expect(getQuery.bind({}, 1)).to.throw();
+		expect(getQuery.bind({}, ["asd",":"])).to.throw();
+		expect(getQuery.bind({}, [":"])).to.throw();
 	});
 
 });
 
-describe("isRelative", () => {
 
-	it("Empty string", () => {
-		isRelative("").should.be.false;
+describe("getHash", () => {
+
+	const getHash = Url.getHash;
+
+	it("Local routing", () => {
+		getHash("/page/page.test.html?v=234#afg.sdf").should.equal("afg.sdf");
 	});
 
-	it("External", () => {
-		isRelative(EXTERNAL_PAGE_TEST_STRING_1).should.be.false;
-	});
-
-
-	it("Relative", () => {
-		isRelative(PAGE_TEST_STRING_2).should.be.true;
-	});
-
-	it("Local - not relative", () => {
-		isRelative(PAGE_TEST_STRING_1).should.be.false;
+	it("Expect non-string to throw", () => {
+		expect(getHash.bind({}, {})).to.throw();
+		expect(getHash.bind({}, 1)).to.throw();
+		expect(getHash.bind({}, ["asd",":"])).to.throw();
+		expect(getHash.bind({}, [":"])).to.throw();
 	});
 
 });
 
-describe("isExternal", () => {
 
-	it("http - lower case", () => {
-		isExternal(EXTERNAL_PAGE_TEST_STRING_1).should.be.true;
-	});
-	
-	it("http - upper case", () => {
-		isExternal(EXTERNAL_PAGE_TEST_STRING_2).should.be.true;
-	});
-	
-	it("https - lower case", () => {
-		isExternal(EXTERNAL_PAGE_TEST_STRING_3).should.be.true;
-	});
-	
-	it("https - upper case", () => {
-		isExternal(EXTERNAL_PAGE_TEST_STRING_4).should.be.true;
+
+
+describe("getFileExtension", () => {
+
+	const getFileExtension = Url.getFileExtension;
+
+	it("Expect no-extension to return empty string", () => {
+		getFileExtension("page/page").should.equal("");
 	});
 
-	it("internal url", () => {
-		isExternal(PAGE_TEST_STRING_1).should.be.false;
-		isExternal(PAGE_TEST_STRING_2).should.be.false;
-		isExternal(PAGE_TEST_STRING_3).should.be.false;
-		isExternal(PAGE_TEST_STRING_4).should.be.false;
+	it("Expect extension to be returned in lower case", () => {
+		getFileExtension("page/page.html").should.equal("html");
+		getFileExtension("page/page.Html").should.equal("html");
 	});
 
-	it("Empty string", () => {
-		isExternal("").should.be.false;
-	})
 
-});
-
-describe("isFile", () => {
-
-	it("Not file", () => {
-		isFile(PAGE_TEST_STRING_1).should.be.false;
-		isFile(PAGE_TEST_STRING_2).should.be.false;
+	it("Expect non-string to throw", () => {
+		expect(getFileExtension.bind({})).to.throw();
+		expect(getFileExtension.bind(1)).to.throw();
+		expect(getFileExtension.bind([":"])).to.throw();
+		expect(getFileExtension.bind(["/"])).to.throw();
+		expect(getFileExtension.bind(["."])).to.throw();
 	});
-
-	it("Is file", () => {
-		isFile(HTML_TEST_STRING_1).should.be.true;
-		isFile(HTML_TEST_STRING_2).should.be.true;
-	});
-
-	it("Empty string", () => {
-		isFile("").should.be.false;
-	})
 
 });
 
 describe("getFileName", () => {
 
-	it("Not file", () => {
-		getFileExtension(PAGE_TEST_STRING_1)
-		getFileExtension(PAGE_TEST_STRING_2)
-	})
+	const getFileName = Url.getFileName;
 
-	it("Lower case", () => {
-		getFileName(HTML_TEST_STRING_1).should.equal("page1-1-1");
+	it("No path should equal self", () => {
+		getFileName("page").should.equal("page");
 	});
 
-	it("Multiple seperators", () => {
-		getFileName(JS_TEST_STRING_1 + ".test.html").should.equal("main.js.test");
+	it("Should include last leg", () => {
+		getFileName("/page/page").should.equal("page");
 	});
 
-	it("Empty string", () => {
-		getFileName("").should.have.lengthOf(0);
-	})
-
-});
-
-describe("getFileExtension", () => {
-
-	it("Not file", () => {
-		getFileExtension(PAGE_TEST_STRING_1).should.have.lengthOf(0);
-		getFileExtension(PAGE_TEST_STRING_2).should.have.lengthOf(0);
-	})
-
-	it("Lower case", () => {
-		getFileExtension(HTML_TEST_STRING_1).should.equal("html");
+	it("Should include last leg", () => {
+		getFileName("/page/page.html").should.equal("page");
 	});
 
-	it("Upper case", () => {
-		getFileExtension(HTML_TEST_STRING_1).should.equal("html");
+	it("Should allow for multiple periods", () => {
+		getFileName("/page/page.test.html").should.equal("page.test");
 	});
 
-	it("Multiple seperators", () => {
-		getFileExtension(JS_TEST_STRING_1 + ".test.html").should.equal("html");
+	it("Should ignore query & hash", () => {
+		getFileName("/page/page.test.html?v=234#afg.sdf").should.equal("page.test");
 	});
 
-	it("Empty string", () => {
-		getFileExtension("").should.have.lengthOf(0);
-	})
-
-});
-
-describe("isHtml", () => {
-
-	it("Html", () => {
-		isHtml(HTML_TEST_STRING_2).should.be.true;
-	});
-
-	it("Not html", () => {
-		isHtml(CSS_TEST_STRING_2).should.be.false;
-		isHtml("").should.be.false;
+	it("Expect non-string to throw", () => {
+		expect(getFileName.bind({})).to.throw();
+		expect(getFileName.bind(1)).to.throw();
+		expect(getFileName.bind([":"])).to.throw();
+		expect(getFileName.bind(["/"])).to.throw();
 	});
 
 });
 
-describe("isJavaScript", () => {
-
-	it("JavaScript", () => {
-		isJavaScript(JS_TEST_STRING_2).should.be.true;
-	});
-
-	it("Not JavaScript", () => {
-		isJavaScript(CSS_TEST_STRING_2).should.be.false;
-	});
-
-});
-
-describe("isCss", () => {
-
-	it("CSS", () => {
-		isCss(CSS_TEST_STRING_2).should.be.true;
-	});
-
-	it("Not CSS", () => {
-		isCss(JS_TEST_STRING_2).should.be.false;
-	});
-
-});
