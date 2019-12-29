@@ -57,4 +57,11 @@ function transformHyperlinks(getUrl, urls=[], $) {
 	// find all img-tags
 }
 
+
+/*
+
+	Org Url => File, New Url
+
+*/
+
 module.exports = crawler;

@@ -5,24 +5,6 @@ const FILE_SEPERATOR = ".";
 const PROTOCOL_SEPERATOR = ":";
 const EXTERNAL_KEYS = [ "http", "https" ];
 
-const EXTERNAL_PAGE_TEST_STRING_1 = "HTTPS://test.com/subfolder1/subfolder1-1/page1-1-1?v=123#someSection";
-
-const EXTERNAL_PAGE_TEST_STRING_1_RESULT = {
-	isHttps: true,
-	rootUrl: "test.com",
-	path: [ "subfolder1", "subfolder1-1" ],
-	hasQuery: true,
-	query: "v=123",
-	hasHash: true,
-	hash: "someSection",
-	oldRoute: "/subfolder1/subfolder1-1/page1-1-1?v=123#someSection",
-	newRoute: "/subfolder1/subfolder1-1/page1-1-1@v=123.html#someSection",
-	oldFileName: "page1-1-1",
-	fileName: "page1-1-1@v=123",
-	fileExtension: "html",
-	file: "page1-1-1@v=123.html"
-}
-
 class Url {
 
 	constructor(url, options={
@@ -35,18 +17,20 @@ class Url {
 		this.route = Url.getUrl(url);
 		this.query = Url.getQuery(url);
 		this.hash = Url.getHash(url);
-
 		this.fullUrl = Url.getFullUrl(this.protocal, this.host, this.route, this.query, this.hash);
+		this.uniqueUrl = Url.getUniqueUrl(this.protocal, this.host, this.route, this.query);
+	}
 
-		this.filePath = [ "TODO" ];
-		this.fileExtension = Url.getFileExtension(url);
-		this.fileName = Url.fileName(url);
+	static getUniqueUrl(protocal, host, route="", query="") {
+		if (typeof protocal !== "string" || typeof host !== "string" || typeof route !== "string" || typeof query !== "string") 
+			throw new Error("Input must be strings");
+		return `${protocal}://${host}${route.length > 0 && route[0] !== "/" && host[host.length -1] !== "/" ? "/" : ""}${route.length > 0 ? route : ""}${query.length > 0 ? "?" + query : ""}`
 	}
 
 	static getFullUrl(protocal, host, route="", query="", hash="") {
 		if (typeof protocal !== "string" || typeof host !== "string" || typeof route !== "string" || typeof query !== "string" || typeof hash !== "string" ) 
 			throw new Error("Input must be strings");
-		return `${protocal}://${host}${route.length > 0 && route[0] !== "/" && host[host.length -1] !== "/" ? "/" : ""}${route.length > 0 ? route : ""}${query.length > 0 ? "?" + query : ""}${hash.length > 0 ? "#" + hash : ""}`
+		return `${Url.getUniqueUrl(protocal, host, route, query)}${hash.length > 0 ? "#" + hash : ""}`
 	}
 
 	static splitUrl(url) {
@@ -101,24 +85,6 @@ class Url {
 		const hashIndex = url.indexOf(HASH_SEPERATOR);
 		return hashIndex < 0 ? defaultHash : url.substring(hashIndex + 1);
 	}
-
-	static getFileExtension(url, defaultExtension="") {
-		const route = Url.getUrl(url);
-		const index = route.lastIndexOf(URL_SEPERATOR);
-		const last = index === -1 ? route : route.substring(index);
-		const seperatorIndex = last.lastIndexOf(FILE_SEPERATOR);
-		return seperatorIndex === -1 ? defaultExtension : last.substring(seperatorIndex + 1).toLowerCase();
-	}
-
-	static getFileName(url) {
-		const route = Url.getUrl(url);
-		const index = route.lastIndexOf(URL_SEPERATOR);
-		const last = index === -1 ? route : route.substring(index + 1);
-		const seperatorIndex = last.lastIndexOf(FILE_SEPERATOR);
-		return seperatorIndex === -1 ? last : last.substring(0, seperatorIndex);
-	}
-
-
 
 	static getFactory(options) {
 		return function(url) {
