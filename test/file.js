@@ -35,6 +35,9 @@ describe("getFileExtension", () => {
 		getFileExtension("page/page.Html").should.equal("html");
 	});
 
+	it("Page, no file extension", () => {
+		getFileExtension("page/page/html", "php").should.equal("php");
+	})
 
 	it("Expect non-string to throw", () => {
 		expect(getFileExtension.bind({})).to.throw();

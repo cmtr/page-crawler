@@ -21,6 +21,7 @@ class Url {
 		this.uniqueUrl = Url.getUniqueUrl(this.protocal, this.host, this.route, this.query);
 	}
 
+
 	static getUniqueUrl(protocal, host, route="", query="") {
 		if (typeof protocal !== "string" || typeof host !== "string" || typeof route !== "string" || typeof query !== "string") 
 			throw new Error("Input must be strings");

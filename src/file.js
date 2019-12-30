@@ -8,11 +8,12 @@ const PROTOCOL_SEPERATOR = ":";
 
 class File {
 
-	constructor(filePath, fileExtension, fileName) {
+	constructor(filePath, fileExtension, fileName, url) {
 		this.filePath = filePath
 		this.fileExtension = fileExtension;
 		this.fileName = fileName;
 		this.location = getFullFilePath(this.filePath, this.fileName, this.fileExtension)
+		this.url = url;
 	}
 
 	static getFullFilePath(filePath=[], fileName="", fileExtension="") {
