@@ -1,1 +1,0 @@
-If you only want the current directory name, where the script is running in, e.g. workingdirectory use:
