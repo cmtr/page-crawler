@@ -8,20 +8,20 @@ const PROTOCOL_SEPERATOR = ":";
 
 class File {
 
-	constructor(filePath, fileExtension, fileName, url) {
+	constructor(rootDirectory="", filePath=[], fileExtension, fileName) {
+		this.rootDirectory = rootDirectory;
 		this.filePath = filePath
 		this.fileExtension = fileExtension;
 		this.fileName = fileName;
-		this.location = File.getFullFilePath(this.filePath, this.fileName, this.fileExtension)
-		this.url = url;
+		this.location = File.getFullFilePath(this.rootDirectory, this.filePath, this.fileName, this.fileExtension)
 	}
 
-	static getFullFilePath(filePath=[], fileName="", fileExtension="") {
-		if (typeof fileName !== "string" || typeof fileExtension !== "string") throw new TypeError("File name and extension must be a string");
+	static getFullFilePath(rootDirectory="", filePath=[], fileName="", fileExtension="") {
+		if (typeof rootDirectory !== "string" || typeof fileName !== "string" || typeof fileExtension !== "string") throw new TypeError("Root dieectory, file name and extension must be a string");
 		if (!Array.isArray(filePath)) throw new TypeError("File path must be an Array");
 		if (filePath.some(e => typeof e !== "string")) throw new TypeError("All file elements must be strings");
 
-		return `./${filePath.join("/")}/${fileName}.${fileExtension}`;
+		return `.${rootDirectory.length > 0 ?  "/" + rootDirectory : ""}/${filePath.join("/")}/${fileName}.${fileExtension}`;
 	}
 
 	static getFilePathFromRoute(route="", defaultExtension="") {
@@ -48,15 +48,16 @@ class File {
 		return first + second;
 	}
 
-	static getUrlFileFactory(options={ pageFileExtension: "html" }) {
+	static getUrlFileFactory(rootDirectory="", pageFileExtension="html", pageFormats=["html", "php"]) {
+		if (typeof rootDirectory !== "string") throw new TypeError("Root directory must be a string");
 		return function(url) {
-			if (typeof url === "string") url = new Url(url, options);
+			if (typeof url === "string") url = new Url(url);
 			if (!(url instanceof Url)) throw new Error("Url must be of Url type");
 
 			const filePath = File.getFilePathFromRoute(url.route);
-			const fileExtension = File.getFileExtensionFromRoute(url.route, options.pageFileExtension);
+			const fileExtension = File.getFileExtensionFromRoute(url.route, pageFileExtension);
 			const fileName = File.getFileNameFromRoute(url.route, url.query);
-			return new File(filePath, fileExtension, fileName, url);
+			return new File(rootDirectory, filePath, fileExtension, fileName);
 		}
 	}
 

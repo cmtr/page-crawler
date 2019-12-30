@@ -6,12 +6,146 @@ const Url = require("../src/url");
 const File = require("../src/file");
 
 
+describe("Factory", () => {
+
+	function testFile(fileObj, resultObj) {
+		Object
+			.keys(resultObj)
+			.forEach(key => {
+				if (Array.isArray(fileObj[key]))
+					fileObj[key].forEach((e, i) => e.should.equal(resultObj[key][i]));
+				else
+					fileObj[key].should.equal(resultObj[key])
+			});
+	}
+
+	describe("Url as String", () => {
+
+		it("Internal", () => {
+			const TEST = "/folder/page";
+
+			const TEST_FILE_RESULT = {
+				rootDirectory: "",
+				filePath: ["folder"],
+				fileName: "page",
+				fileExtension: "html",
+				location: "./folder/page.html"
+			};
+
+			testFile(File.getUrlFileFactory()(TEST), TEST_FILE_RESULT);
+
+		});
+
+		it("With query", () => {
+
+			const TEST = "/folder/page?v=123";
+
+			const TEST_FILE_RESULT = {
+				rootDirectory: "",
+				filePath: ["folder"],
+				fileName: "page",
+				fileExtension: "html",
+				location: "./folder/page$v=123.html"
+			};
+
+			testFile(File.getUrlFileFactory()(TEST), TEST_FILE_RESULT);
+
+		});
+
+		it("Internal Index page", () => {
+			const TEST = "/";
+
+			const TEST_FILE_RESULT = {
+				rootDirectory: "",
+				filePath: [],
+				fileName: "index",
+				fileExtension: "html",
+				location: "./index.html"
+			};
+
+			testFile(File.getUrlFileFactory()(TEST), TEST_FILE_RESULT);
+
+		});
+
+		it("Internal Index page with query", () => {
+			const TEST = "/?v=123";
+
+			const TEST_FILE_RESULT = {
+				rootDirectory: "",
+				filePath: [],
+				fileName: "index",
+				fileExtension: "html",
+				location: "./index$v=123.html"
+			};
+
+			testFile(File.getUrlFileFactory()(TEST), TEST_FILE_RESULT);
+		});
+
+
+		it("External", () => {
+
+			const TEST = "https://test.com/folder/page";
+
+			const TEST_FILE_RESULT = {
+				rootDirectory: "",
+				filePath: ["test", "com", "folder"],
+				fileName: "page",
+				fileExtension: "html",
+				location: "./test/com/folder/page.html"
+			};
+
+			testFile(File.getUrlFileFactory()(TEST), TEST_FILE_RESULT);
+
+		});
+
+		it("External Index Page", () => {
+			
+			const TEST = "https://test.com/";
+
+			const TEST_FILE_RESULT = {
+				rootDirectory: "",
+				filePath: ["test", "com"],
+				fileName: "index",
+				fileExtension: "html",
+				location: "./test/com/index.html"
+			};
+
+			testFile(File.getUrlFileFactory()(TEST), TEST_FILE_RESULT);
+		});
+
+		it("External Index Page with Query", () => {
+			const TEST = "https://test.com?v=123";
+
+			const TEST_FILE_RESULT = {
+				rootDirectory: "",
+				filePath: ["test", "com"],
+				fileName: "index",
+				fileExtension: "html",
+				location: "./test/com/index$v=123.html"
+			};
+
+			testFile(File.getUrlFileFactory()(TEST), TEST_FILE_RESULT);
+		});
+
+	});
+
+	describe("Url instance - default", () => {
+
+	});
+
+	describe("Url instance - custom", () => {
+
+	});
+
+});
+
 describe("getFullFilePath", () => {
 
 	const getFullFilePath = File.getFullFilePath;
 
-	it("Expect ", () => {
-		getFullFilePath(["folder", "subfolder"], "page", "html").should.equal("./folder/subfolder/page.html");
+	it("Expect", () => {
+		getFullFilePath("footer", ["folder", "subfolder"], "page", "html").should.equal("./footer/folder/subfolder/page.html");
+		getFullFilePath(undefined,["folder", "subfolder"], "page", "html").should.equal("./folder/subfolder/page.html");
 	});
 
 	it("Expect to throw", () => {
@@ -98,8 +232,4 @@ describe("getFileName", () => {
 });
 
 
-describe("Factory", () => {
 
-	
-
-});

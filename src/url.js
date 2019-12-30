@@ -5,16 +5,15 @@ const FILE_SEPERATOR = ".";
 const PROTOCOL_SEPERATOR = ":";
 const EXTERNAL_KEYS = [ "http", "https" ];
 
+
+
 class Url {
 
-	constructor(url, options={
-		protocal: "http",
-		host: "localhost"
-	}) {
+	constructor(url, defaultProtocal="http", defaultHost="localhost") {
 		this.url = Url.getUrl(url);
-		this.protocal = Url.getProtocol(url, options.protocal);
-		this.host = Url.getHost(url, options.host);
-		this.route = Url.getUrl(url);
+		this.protocal = Url.getProtocol(url, defaultProtocal);
+		this.host = Url.getHost(url, defaultHost);
+		this.route = Url.getRoute(url);
 		this.query = Url.getQuery(url);
 		this.hash = Url.getHash(url);
 		this.fullUrl = Url.getFullUrl(this.protocal, this.host, this.route, this.query, this.hash);
@@ -87,9 +86,9 @@ class Url {
 		return hashIndex < 0 ? defaultHash : url.substring(hashIndex + 1);
 	}
 
-	static getFactory(options) {
+	static getFactory(protocal="http", host="localhost") {
 		return function(url) {
-			return new Url(url, options);
+			return new Url(url, protocal, host);
 		};
 	}
 

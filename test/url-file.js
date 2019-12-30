@@ -15,7 +15,7 @@ describe("Factory", () => {
 	})
 
 	it("Should return UrlFile", () => {
-		factory("/page/page.html").should.be.instanceof(UrlFile);
+		factory("root","/page/page.html").should.be.instanceof(UrlFile);
 	});
 
 	it("Throw if not a string", () => {
@@ -23,6 +23,21 @@ describe("Factory", () => {
 		expect(factory.bind(1)).to.throw();
 		expect(factory.bind([":"])).to.throw();
 		expect(factory.bind(["/"])).to.throw();
-	})
+	});
+
+
+	describe("Simple Case", () => {
+
+		const url = factory("https://test.com/folder/page");
+
+		it("Old url", () => {
+			url.oldUrl.url.should.equal("https://test.com/folder/page");
+		});
+
+		it("Unique", () => {
+			url.oldUrl.uniqueUrl.should.equal("https://test.com/folder/page");
+		});
+	});
 
 });
+

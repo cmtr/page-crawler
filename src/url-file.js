@@ -11,13 +11,26 @@ class UrlFile {
 		this.isPage = isPage;
 	}
 
-	static getFactory(options) {
-		const urlFactory = Url.getFactory(options);
-		const fileFactory = File.getUrlFileFactory(options);
+	static getFactory(options={
+		oldProtocal: "http",
+		newProtocal: "http",
+		oldHost: "localhost",
+		newHost: "localhost",
+		rootDirectory: "",
+		pageFormats: ["html", "php"],
+		pageFileExtension: "html"
+	}) {
+		
+		const oldUrlFactory = Url.getFactory(options.oldProtocal,options.newHost);
+		
+		const fileFactory = File.getUrlFileFactory(options.rootDirectory, options.pageFileExtension, options.pageFormats);
+
+		const newUrlFactory = Url.getFactory(options.newProtocal, options.newHost);
+
 		return function(urlString) {
-			const oldUrl = urlFactory(urlString);
+			const oldUrl = oldUrlFactory(urlString);
 			const file = fileFactory(oldUrl);
-			const newUrl = urlFactory(`${file.location}${oldUrl.hash.length > 0 ? "#" + oldUrl.hash : ""}`);
+			const newUrl = newUrlFactory(`${file.location}${oldUrl.hash.length > 0 ? "#" + oldUrl.hash : ""}`);
 			return new UrlFile(oldUrl, newUrl, file);
 		}
 	}
