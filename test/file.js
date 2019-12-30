@@ -8,23 +8,40 @@ const File = require("../src/file");
 
 describe("getFullFilePath", () => {
 
-	const getFilePath = File.getFilePathFromUrl;
+	const getFullFilePath = File.getFullFilePath;
+
+	it("Expect ", () => {
+		getFullFilePath(["folder", "subfolder"], "page", "html").should.equal("./folder/subfolder/page.html");
+	});
+
+	it("Expect to throw", () => {
+		expect(getFullFilePath.bind({}, {}, "asdf", "asdf")).to.throw();
+		expect(getFullFilePath.bind({}, "", "asdf", "asdf")).to.throw();
+		expect(getFullFilePath.bind({}, [], 2, "asdf")).to.throw();
+		expect(getFullFilePath.bind({}, [], "asdf", 2)).to.throw();
+	})
 
 });
 
-describe("getFilePathFromUrl", () => {
+describe("getFilePath", () => {
 
-	const getFilePath = File.getFilePathFromUrl;
+	const getFilePath = File.getFilePathFromRoute;
 
 	it("Expect no-extension to return empty string", () => {
-		// getFilePath("page/page").should.equal(["page"]);
+		const func1 = getFilePath("page/page/site.html");
+		const res1 = [ "page", "page" ];
+		checkArray(func1,res1);
 	});
+
+	function checkArray(check, result) {
+		check.forEach((e, i) => e.should.equal(result[i]));
+	}
 
 });
 
 describe("getFileExtension", () => {
 
-	const getFileExtension = File.getFileExtensionFromUrl;
+	const getFileExtension = File.getFileExtensionFromRoute;
 
 	it("Expect no-extension to return empty string", () => {
 		getFileExtension("page/page").should.equal("");
@@ -40,18 +57,17 @@ describe("getFileExtension", () => {
 	})
 
 	it("Expect non-string to throw", () => {
-		expect(getFileExtension.bind({})).to.throw();
-		expect(getFileExtension.bind(1)).to.throw();
-		expect(getFileExtension.bind([":"])).to.throw();
-		expect(getFileExtension.bind(["/"])).to.throw();
-		expect(getFileExtension.bind(["."])).to.throw();
+		expect(getFileExtension.bind({}, 1)).to.throw();
+		expect(getFileExtension.bind({}, [":"])).to.throw();
+		expect(getFileExtension.bind({}, ["/"])).to.throw();
+		expect(getFileExtension.bind({}, ["."])).to.throw();
 	});
 
 });
 
 describe("getFileName", () => {
 
-	const getFileName = File.getFileNameFromUrl;
+	const getFileName = File.getFileNameFromRoute;
 
 	it("No path should equal self", () => {
 		getFileName("page").should.equal("page");
@@ -70,15 +86,20 @@ describe("getFileName", () => {
 	});
 
 	it("Should not ignore query", () => {
-		getFileName("/page/page.test.html?v=234#afg.sdf").should.equal("page.test$v=234");
+		getFileName("/page/page.test.html", "v=234").should.equal("page.test$v=234");
 	});
 
 	it("Expect non-string to throw", () => {
-		expect(getFileName.bind({})).to.throw();
-		expect(getFileName.bind(1)).to.throw();
-		expect(getFileName.bind([":"])).to.throw();
-		expect(getFileName.bind(["/"])).to.throw();
+		expect(getFileName.bind({}, 1)).to.throw();
+		expect(getFileName.bind({}, [":"])).to.throw();
+		expect(getFileName.bind({}, ["/"])).to.throw();
 	});
 
 });
 
+
+describe("Factory", () => {
+
+	
+
+});

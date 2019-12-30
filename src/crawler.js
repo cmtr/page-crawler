@@ -14,11 +14,14 @@ Array.prototype.pushArray = function(arr) {
 }
 
 async function crawler(url, rootDirectory=__dirname, options={
-	external: 0,
+	depth: 0,
 	transform: false,
 	https: false,
 	loadJavaScript: false,
-	fsOptions: {}
+	pageFormats: ["html", "php"],
+	rootFileName: "index",
+	rootFileExtension: "html",
+	pageFileExtension: "html"
 }) {
 	const queue = [];
 	const queueUrls = new Set();
@@ -36,9 +39,7 @@ async function crawler(url, rootDirectory=__dirname, options={
 	const urlSets = [ completedUrls, newUrls, queueUrls, failureUrls ];
 	const isNewUrl = url => urlSets.every(set => !set.has(url.oldUrl.uniqueUrl));
 
-	const getUrl = UrlFile.getFactory({
-
-	})
+	const getUrl = UrlFile.getFactory(options);
 
 	queue.push(getUrl(url));
 

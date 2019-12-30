@@ -22,3 +22,5 @@ class UrlFile {
 		}
 	}
 }
+
+module.exports = UrlFile;
