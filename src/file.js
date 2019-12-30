@@ -21,12 +21,12 @@ class File {
 		if (!Array.isArray(filePath)) throw new TypeError("File path must be an Array");
 		if (filePath.some(e => typeof e !== "string")) throw new TypeError("All file elements must be strings");
 
-		return `.${rootDirectory.length > 0 ?  "/" + rootDirectory : ""}/${filePath.join("/")}/${fileName}.${fileExtension}`;
+		return `.${rootDirectory.length > 0 ?  "/" + rootDirectory : ""}${filePath.length > 0 ? "/" + filePath.join("/") : ""}/${fileName}.${fileExtension}`;
 	}
 
 	static getFilePathFromRoute(route="", defaultExtension="") {
 		if (typeof route !== "string") throw new TypeError("Route must be a string");
-		const path = route.split(URL_SEPERATOR);
+		const path = route.split(URL_SEPERATOR).filter(e => e !== "/" && e.length === 0);
 		return path.splice(0, path.length - 1);
 	}
 
@@ -50,8 +50,8 @@ class File {
 
 	static getHostRoute(host) {
 		const route = host.split(FILE_SEPERATOR);
-		const reverse = route.reverse();
-		return reverse.join("/");
+		route.reverse();
+		return route.join(URL_SEPERATOR);
 	}
 
 	static getUrlFileFactory(rootDirectory="", pageFileExtension="html", pageFormats=["html", "php"], defaultIndexPageFileName="index") {

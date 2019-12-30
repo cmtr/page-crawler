@@ -162,6 +162,18 @@ describe("File", () => {
 
 		const getFilePath = File.getFilePathFromRoute;
 
+		it("Index page", () => {
+			const arr = getFilePath("");
+			arr.should.have.lengthOf(0);
+		});
+
+
+		it("External Index page", () => {
+			const arr = getFilePath("com/test");
+			arr.should.have.lengthOf(2);
+			checkArray(arr, ["com", "test"])
+		});
+
 		it("Expect no-extension to return empty string", () => {
 			const func1 = getFilePath("page/page/site.html");
 			const res1 = [ "page", "page" ];
@@ -224,6 +236,10 @@ describe("File", () => {
 			getFileName("/page/page.test.html", "v=234").should.equal("page.test$v=234");
 		});
 
+		it("Index -> blank", () => {
+			getFileName("/").should.equal("");
+		});
+
 		it("Expect non-string to throw", () => {
 			expect(getFileName.bind({}, 1)).to.throw();
 			expect(getFileName.bind({}, [":"])).to.throw();
@@ -233,6 +249,10 @@ describe("File", () => {
 	});
 
 	describe("getHostRoute", () => {
+
+		it("localhost", () => {
+			File.getHostRoute("localhost").should.equal("localhost");
+		});
 
 		it("test.com", () => {
 			File.getHostRoute("test.com").should.equal("com/test");
