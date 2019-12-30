@@ -13,7 +13,9 @@ class Url {
 		this.url = Url.getUrl(url);
 		this.protocal = Url.getProtocol(url, defaultProtocal);
 		this.host = Url.getHost(url, defaultHost);
+		this.isExternal = defaultHost.toLowerCase() !== this.host;
 		this.route = Url.getRoute(url);
+		this.isIndex = this.route.length === 0;
 		this.query = Url.getQuery(url);
 		this.hash = Url.getHash(url);
 		this.fullUrl = Url.getFullUrl(this.protocal, this.host, this.route, this.query, this.hash);
@@ -87,6 +89,8 @@ class Url {
 	}
 
 	static getFactory(protocal="http", host="localhost") {
+		this.protocal = protocal;
+		this.host = host;
 		return function(url) {
 			return new Url(url, protocal, host);
 		};

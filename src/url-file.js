@@ -18,12 +18,13 @@ class UrlFile {
 		newHost: "localhost",
 		rootDirectory: "",
 		pageFormats: ["html", "php"],
+		defaultIndexPageFileName: "index",
 		pageFileExtension: "html"
 	}) {
 		
 		const oldUrlFactory = Url.getFactory(options.oldProtocal,options.newHost);
 		
-		const fileFactory = File.getUrlFileFactory(options.rootDirectory, options.pageFileExtension, options.pageFormats);
+		const fileFactory = File.getUrlFileFactory(options.rootDirectory, options.pageFileExtension, options.pageFormats, options.defaultIndexPageFileName);
 
 		const newUrlFactory = Url.getFactory(options.newProtocal, options.newHost);
 

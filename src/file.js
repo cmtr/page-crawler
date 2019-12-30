@@ -48,15 +48,25 @@ class File {
 		return first + second;
 	}
 
-	static getUrlFileFactory(rootDirectory="", pageFileExtension="html", pageFormats=["html", "php"]) {
+	static getHostRoute(host) {
+		const route = host.split(FILE_SEPERATOR);
+		const reverse = route.reverse();
+		return reverse.join("/");
+	}
+
+	static getUrlFileFactory(rootDirectory="", pageFileExtension="html", pageFormats=["html", "php"], defaultIndexPageFileName="index") {
 		if (typeof rootDirectory !== "string") throw new TypeError("Root directory must be a string");
 		return function(url) {
 			if (typeof url === "string") url = new Url(url);
 			if (!(url instanceof Url)) throw new Error("Url must be of Url type");
 
-			const filePath = File.getFilePathFromRoute(url.route);
+			const filePathString = url.isExternal 
+				? File.getHostRoute(url.host) + "/" + url.route
+				: url.route;
+			const filePath = File.getFilePathFromRoute(filePathString);
 			const fileExtension = File.getFileExtensionFromRoute(url.route, pageFileExtension);
-			const fileName = File.getFileNameFromRoute(url.route, url.query);
+			const route = url.isIndex ? defaultIndexPageFileName : url.route;
+			const fileName = File.getFileNameFromRoute(route, url.query);
 			return new File(rootDirectory, filePath, fileExtension, fileName);
 		}
 	}
