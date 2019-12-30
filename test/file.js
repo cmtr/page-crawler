@@ -43,7 +43,7 @@ describe("Factory", () => {
 			const TEST_FILE_RESULT = {
 				rootDirectory: "",
 				filePath: ["folder"],
-				fileName: "page",
+				fileName: "page$v=123",
 				fileExtension: "html",
 				location: "./folder/page$v=123.html"
 			};
