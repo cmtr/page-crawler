@@ -15,84 +15,95 @@ Array.prototype.pushArray = function(arr) {
 }
 */
 
-async function crawler(url, rootDirectory=__dirname, options={
-	depth: 0,
-	transform: false,
-	https: false,
-	loadJavaScript: false,
-	pageFormats: ["html", "php"],
-	rootFileName: "index",
-	rootFileExtension: "html",
-	pageFileExtension: "html"
-}) {
-	const queue = [];
-	const queueUrls = new Set();
-	
-	const newUrls = new Set();
+function crawlerFactoru(rootDirectory=__dirname, options={}) {
+	const depth = options.depth || 0;
+	const transform = options.transform || false;
+	const https = options.https || false;
+	const loadJavaScript = options.loadJavaScript || false;
+	const pageFormats = options.pageFormats || ["html", "php", "asp"];
+	const defaultFileExtension = options.rootFileExtension || "html";
+	const defaultPageFileExtension = options.pageFileExtension || "html";
+	const fsOptions = {
+		// TOOD
+	};
 
-	const completedUrls = new Set();
-	const completed = new Set();
-	// const completedMap = new Map();
-	
-	const failures = new Set();
-	const failureUrls = new Set();
-	// const failuerMap = new Map();
-	
-	const urlSets = [ completedUrls, newUrls, queueUrls, failureUrls ];
-	const isNewUrl = url => urlSets.every(set => !set.has(url.oldUrl.uniqueUrl));
 
-	const getUrl = UrlFile.getFactory(options);
+	const urlFactory = UrlFile.getFactory(); // TODO
+	const scraperFunction = loadJavaScript ? cheerioScraper : cheerioScraper; // TODO change to puppeteer of jS enabled
+	const modifier = transform ? transformHyperlinks : collectHyperlinks;
+	const scraper = scraperFunction.bind({}, rootDirectory, modifier.bind({}, urlFactory), fsOptions);
 
-	queue.push(getUrl(url));
 
-	const modify = options.transform ? transformHyperlinks : collectHyperlinks;
-	const rawScraper = options.loadJavaScript ? cheerioScraper : cheerioScraper; // TODO change to puppeteer of jS enabled
-	const scraper = rawScraper.bind({}, rootDirectory, modify.bind({}, getUrl), options.fsOptions);
-
-	while (queue.length > 0) {
-		const current = queue.shift();
-		await scraper(current)
-			.then(success => {
-				const { urls } = success;
-				const newUniqueUrls = urls.map(url => url.newUrl.uniqueUrl);
-				newUniqueUrls.forEach(url => newUrls.add(url));
-				// newUrls.addAll(newUniqueUrls);
-
-				const newCollectedUrls = urls.filter(isNewUrl);
-				Array.prototype.add(queue, newCollectedUrls);
-				// queue.pushArray(newCollectedUrls);
-				const newCollectedUniqueUrls = newCollectedUrls.map(url => url.oldUrl.uniqueUrl);
-				queueUrls.addAll(newCollectedUniqueUrls);
-
-				completed.add(current);
-				completedUrls.add(current.oldUrl.uniqueUrl);
-				queueUrls.delete(current.oldUrl.uniqueUrl);
-
-				console.log(`Successfully saved ${current.oldUrl.uniqueUrl}
-					\n\tTo file: ${current.file.location}
-					\n\tNew url: ${current.newUrls.uniqueUrl}
-					\nCompleted: ${completed.size}\tFailures: ${failures.size}\tRemaining: ${queue.length}`
-				);
-			})
-			.catch(failure => {
-				if (!("attempt" in current) || current.attempt < 5) {
-					current.attempt = current.attempt + 1 || 0;	
-					queue.push(current);			
-					console.log("")
-				} else {
-					failures.add(current)
-					failureUrls.add(current.oldUrl.uniqueUrl);
-					queueUrls.delete(current.oldUrl.uniqueUrl);
-					console.log("")
-				}
-			});
-		// success - add to completed
-		// failure - add to back of queue - increment attempt
-	}
-
+	return getCrawler(scraper, urlFactory);
 }
 
 
+function getCrawler(scraper, urlFactory) {
+	return async function(rootUrl) {
+
+		const queue = [];
+		const queueUrls = new Set();
+		
+		const newUrls = new Set();
+
+		const completedUrls = new Set();
+		const completed = new Set();
+		// const completedMap = new Map();
+		
+		const failures = new Set();
+		const failureUrls = new Set();
+		// const failuerMap = new Map();
+		
+		const urlSets = [ completedUrls, newUrls, queueUrls, failureUrls ];
+		const isNewUrl = url => urlSets.every(set => !set.has(url.oldUrl.uniqueUrl));
+
+		const url = urlFactory(rootDirectory);
+		queue.push(url);
+		queueUrls.add(url.uniqueUrl);
+
+		while (queue.length > 0) {
+			const current = queue.shift();
+			await scraper(current)
+				.then(success => {
+					const { urls } = success;
+					const newUniqueUrls = urls.map(url => url.newUrl.uniqueUrl);
+					newUniqueUrls.forEach(url => newUrls.add(url));
+					// newUrls.addAll(newUniqueUrls);
+
+					const newCollectedUrls = urls.filter(isNewUrl);
+					Array.prototype.add(queue, newCollectedUrls);
+					// queue.pushArray(newCollectedUrls);
+					const newCollectedUniqueUrls = newCollectedUrls.map(url => url.oldUrl.uniqueUrl);
+					queueUrls.addAll(newCollectedUniqueUrls);
+
+					completed.add(current);
+					completedUrls.add(current.oldUrl.uniqueUrl);
+					queueUrls.delete(current.oldUrl.uniqueUrl);
+
+					console.log(`Successfully saved ${current.oldUrl.uniqueUrl}
+						\n\tTo file: ${current.file.location}
+						\n\tNew url: ${current.newUrls.uniqueUrl}
+						\nCompleted: ${completed.size}\tFailures: ${failures.size}\tRemaining: ${queue.length}`
+					);
+				})
+				.catch(failure => {
+					if (!("attempt" in current) || current.attempt < 5) {
+						current.attempt = current.attempt + 1 || 0;	
+						queue.push(current);			
+						console.log("")
+					} else {
+						failures.add(current)
+						failureUrls.add(current.oldUrl.uniqueUrl);
+						queueUrls.delete(current.oldUrl.uniqueUrl);
+						console.log("")
+					}
+				});
+			// success - add to completed
+			// failure - add to back of queue - increment attempt
+		}
+	}
+
+}
 
 
 
