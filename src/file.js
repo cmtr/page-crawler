@@ -26,7 +26,9 @@ class File {
 
 	static getFilePathFromRoute(route="", defaultExtension="") {
 		if (typeof route !== "string") throw new TypeError("Route must be a string");
-		const path = route.split(URL_SEPERATOR).filter(e => e !== "/" && e.length === 0);
+		const path = route
+			.trim()
+			.split(URL_SEPERATOR)
 		return path.splice(0, path.length - 1);
 	}
 

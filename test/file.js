@@ -180,9 +180,35 @@ describe("File", () => {
 			checkArray(func1,res1);
 		});
 
+
 		function checkArray(check, result) {
 			check.forEach((e, i) => e.should.equal(result[i]));
 		}
+
+
+		describe("Test", () => {
+
+			const url = {
+				isExternal: true,
+				host: "localhost",
+				route: "page/page"
+			};
+
+			const filePathString = url.isExternal 
+				? File.getHostRoute(url.host) + "/" + url.route
+				: url.route;
+			const filePath = File.getFilePathFromRoute(filePathString);
+
+			it("filePathString", () => {
+				filePathString.should.equal("localhost/page/page")
+			});
+
+			it("filePath", () => {
+				filePath.should.have.lengthOf(2);
+				console.log(filePath);
+			});
+
+		});
 
 	});
 

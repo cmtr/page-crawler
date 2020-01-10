@@ -3,6 +3,7 @@ const puppeteer = require('puppeteer');
 const fse = require('fs-extra');
 const UrlFile = require("./url-file");
 
+/*
 Set.prototype.addAll = function(iterable) {
 	for (let item of iterable) {
 		this.add(item);
@@ -12,6 +13,7 @@ Set.prototype.addAll = function(iterable) {
 Array.prototype.pushArray = function(arr) {
 	this.push.apply(this, arr);
 }
+*/
 
 async function crawler(url, rootDirectory=__dirname, options={
 	depth: 0,
@@ -53,10 +55,12 @@ async function crawler(url, rootDirectory=__dirname, options={
 			.then(success => {
 				const { urls } = success;
 				const newUniqueUrls = urls.map(url => url.newUrl.uniqueUrl);
-				newUrls.addAll(newUniqueUrls);
+				newUniqueUrls.forEach(url => newUrls.add(url));
+				// newUrls.addAll(newUniqueUrls);
 
 				const newCollectedUrls = urls.filter(isNewUrl);
-				queue.pushArray(newCollectedUrls);
+				Array.prototype.add(queue, newCollectedUrls);
+				// queue.pushArray(newCollectedUrls);
 				const newCollectedUniqueUrls = newCollectedUrls.map(url => url.oldUrl.uniqueUrl);
 				queueUrls.addAll(newCollectedUniqueUrls);
 
