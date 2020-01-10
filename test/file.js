@@ -111,7 +111,9 @@ describe("File", () => {
 					location: "./com/test/index.html"
 				};
 
-				testFile(File.getUrlFileFactory()(TEST), TEST_FILE_RESULT);
+				const file = File.getUrlFileFactory()(TEST);
+
+				testFile(file, TEST_FILE_RESULT);
 			});
 
 			it("External Index Page with Query", () => {
@@ -167,12 +169,14 @@ describe("File", () => {
 			arr.should.have.lengthOf(0);
 		});
 
-
+		/*
 		it("External Index page", () => {
 			const arr = getFilePath("com/test");
 			arr.should.have.lengthOf(2);
 			checkArray(arr, ["com", "test"])
 		});
+		*/
+
 
 		it("Expect no-extension to return empty string", () => {
 			const func1 = getFilePath("page/page/site.html");
