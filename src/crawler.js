@@ -3,19 +3,8 @@ const puppeteer = require('puppeteer');
 const fse = require('fs-extra');
 const UrlFile = require("./url-file");
 
-/*
-Set.prototype.addAll = function(iterable) {
-	for (let item of iterable) {
-		this.add(item);
-	}
-}
-
-Array.prototype.pushArray = function(arr) {
-	this.push.apply(this, arr);
-}
-*/
-
-function crawlerFactoru(rootDirectory=__dirname, options={}) {
+function crawlerFactory(url, rootDirectory=__dirname, options={}) {
+	// Configurations & Defaults
 	const depth = options.depth || 0;
 	const transform = options.transform || false;
 	const https = options.https || false;
@@ -23,23 +12,52 @@ function crawlerFactoru(rootDirectory=__dirname, options={}) {
 	const pageFormats = options.pageFormats || ["html", "php", "asp"];
 	const defaultFileExtension = options.rootFileExtension || "html";
 	const defaultPageFileExtension = options.pageFileExtension || "html";
-	const fsOptions = {
-		// TOOD
-	};
+
+	const urlFactory = UrlFile.getFactory({
+		rootDirectory. pageFormats, https, defaultFileExtension,
+	}); 
 
 
-	const urlFactory = UrlFile.getFactory(); // TODO
-	const scraperFunction = loadJavaScript ? cheerioScraper : cheerioScraper; // TODO change to puppeteer of jS enabled
-	const modifier = transform ? transformHyperlinks : collectHyperlinks;
-	const scraper = scraperFunction.bind({}, rootDirectory, modifier.bind({}, urlFactory), fsOptions);
+		/*
+		const rootDirectory = options.rootDirectory || "";
+		const pageFormats = options.pageFormats || ["html", "php", "asp"];
+		const defaultIndexPageFileName = options.defaultIndexPageFileName || "index";
+		const pageFileExtension = options.pageFileExtension || "html";
+		const oldProtocal = options.oldProtocal || "http";
+		const oldHost = options.oldHost || "localhost";
+		const newProtocal = options.newProtocal || "http";
+		const newHost = options.newHost || "localhost";
+		*/
+	
+	const hyperlinkConsumer = transform ? transformHyperlinks : collectHyperlinks;
+	const modifier = hyperlinkConsumer(urlFactory);
+	
+	const scraper = loadJavaScript ? getCheerioWithPuppeteer : getCheerioWithAxios; ;
 
-
-	return getCrawler(scraper, urlFactory);
+	const pageToFile = savePageToFile(scarper, modifier, savePageToFile);
+	const resourceToFile = saveResourceToFile()
+	
+	return getCrawler(pageToFile, resourceToFile, isResourcePredicate(pageFormats), urlFactory);
 }
 
 
-function getCrawler(scraper, urlFactory) {
+function isResourcePredicate(pageFormats=[]) {
+	return function(url) {
+		return pageFormats.some(extension => extension === url.file.fileExtension);
+	}
+}
+
+
+function uniqueUrlFactory(...sets) {
+	if (!sets.every(set => set instanceof Set)) throw new TypeError("All arguments must be of class Set.");
+	return function(url) {
+		return !sets.some(set => !set,has(url.oldUrl.uniqueUrl));
+	}
+}
+
+function getCrawler(pageToFile, resourceToFile, isResourcePredicate, urlFactory) {
 	return async function(rootUrl) {
+		
 
 		const queue = [];
 		const queueUrls = new Set();
@@ -54,27 +72,26 @@ function getCrawler(scraper, urlFactory) {
 		const failureUrls = new Set();
 		// const failuerMap = new Map();
 		
-		const urlSets = [ completedUrls, newUrls, queueUrls, failureUrls ];
-		const isNewUrl = url => urlSets.every(set => !set.has(url.oldUrl.uniqueUrl));
+		const uniqueUrlPredicate = ;
 
-		const url = urlFactory(rootDirectory);
+		const url = urlFactory(rootUrl);
 		queue.push(url);
 		queueUrls.add(url.uniqueUrl);
 
 		while (queue.length > 0) {
 			const current = queue.shift();
-			await scraper(current)
+
+			const persistanceFunction = isResourcePredicate(current) ? resourceToFile : pageToFile;
+
+			await persistanceFunction(current)
 				.then(success => {
 					const { urls } = success;
 					const newUniqueUrls = urls.map(url => url.newUrl.uniqueUrl);
 					newUniqueUrls.forEach(url => newUrls.add(url));
-					// newUrls.addAll(newUniqueUrls);
-
-					const newCollectedUrls = urls.filter(isNewUrl);
+					const newCollectedUrls = urls.filter(uniqueUrlFactory(completedUrls, newUrls, queueUrls, failureUrls));
+					
 					Array.prototype.add(queue, newCollectedUrls);
-					// queue.pushArray(newCollectedUrls);
-					const newCollectedUniqueUrls = newCollectedUrls.map(url => url.oldUrl.uniqueUrl);
-					queueUrls.addAll(newCollectedUniqueUrls);
+					newCollectedUrls.forEach(url => queueUrls.add(url));
 
 					completed.add(current);
 					completedUrls.add(current.oldUrl.uniqueUrl);
@@ -98,8 +115,6 @@ function getCrawler(scraper, urlFactory) {
 						console.log("")
 					}
 				});
-			// success - add to completed
-			// failure - add to back of queue - increment attempt
 		}
 	}
 
@@ -107,21 +122,40 @@ function getCrawler(scraper, urlFactory) {
 
 
 
-function collectHyperlinks(getUrl, $) {
-	// find all a-tags
-	// find all script-tags
-	// find all link-tags
-	// find all img-tags
+function saveResourceToFile() {
+	return function(current) {
+			return axios
+				.get(url.oldUrl.uniqueUrl, { responseType: "stream" })
+				.then(response => new Promise((resolve, reject) => {
+					const { location } = current.file;
+					
+					fse.ensureFileSync(location);
+					
+					response.data
+			          .pipe(fs.createWriteStream(location))
+			          .on('finish', () => resolve())
+			          .on('error', error => reject(error));
+				}));
+				// TODO - Response		
+			}
 }
 
-function transformHyperlinks(getUrl, $) {
-	// modify all isPage & !isHtml => isHtml
-
-	// find all a-tags
-	// find all script-tags
-	// find all link-tags
-	// find all img-tags
+function savePageToFile(scraper, modifier) {
+	return function(current) {
+		return scraper(current)
+			.then(modifier(current))
+			.then(saveCheerioToFile(current));
+			// TODO - Response
+	}
 }
+
+function saveCheerioToFile(url) {
+	if (!(url instanceof UrlFile)) throw new Error("Url must be of class UrlFile.");
+	return function($) {
+		return fse.outputFileSync(url.file.location, $.html());
+	}
+}
+
 
 function getCheerioWithAxios(url) {
 	if (!(url instanceof UrlFile)) throw new Error("Url must be of class UrlFile.");
@@ -140,50 +174,45 @@ function getCheerioWithPuppeteer(url) {
 		.then(page => cheerio.load(page.html()));
 }
 
-function saveUrlToFile(rootDirectory, modify, options={
-	loadJavaScript: false,
-}) {
-	
-	const cheerioSupplier = options.loadJavaScript ? getCheerioWithPuppeteer : getCheerioWithAxios;
-	const pageToFile = savePageToFile(cheerioSupplier, rootDirectory, modify);
-	const resourceToFile = saveResourceToFile(rootDirectory);
-	return function(url) {
-		return url.isPage() ? pageToFile(url) : resourceToFile(url);
-	}
-}
 
-function saveResourceToFile(rootDirectory) {
-	return axios
-		.get(url.oldUrl.uniqueUrl, { responseType: "stream" })
-		.then(response => new Promise((resolve, reject) => {
-			const { location } = url.file;
-			
-			fse.ensureFileSync(location);
-			
-			response.data
-	          .pipe(fs.createWriteStream(location))
-	          .on('finish', () => resolve())
-	          .on('error', error => reject(error));
-		}));
-	
-}
-
-function savePageToFile(cheerioSupplier, rootDirectory, modify=e => e) {
-	return function(url) {
-		if (!(url instanceof UrlFile)) throw new Error("Url must be of class UrlFile.");
-		return cheerioSupplier(url.uniqueUrl)
-			.then(modify)
-			.then(saveCheerioToFile(rootDirectory, url));
+function collectHyperlinks(urlFactory) {
+	return function(current) {
+		return function($) {
+			// find all a-tags
+			// find all script-tags
+			// find all link-tags
+			// find all img-tags	
+		}
 	}
 }
 
 
-function saveCheerioToFile(rootDirectory, url) {
-	if (!(url instanceof UrlFile)) throw new Error("Url must be of class UrlFile.");
-	return function($) {
-		return fse.outputFileSync(url.file.location, $.html());
+function transformHyperlinks(urlFactory) {
+	return function(current) {
+		return function($) {
+			// modify all isPage & !isHtml => isHtml
+
+			// find all a-tags
+			// find all script-tags
+			// find all link-tags
+			// find all img-tags			
+		}
 	}
 }
 
+/*
+if (process.env.NODE_ENV === "test") {
+	exports.isResourcePredicate = isResourcePredicate;
+	exports.uniqueUrlFactory = uniqueUrlFactory;
+	exports.transformHyperlinks = transformHyperlinks;
+	exports.collectHyperlinks = collectHyperlinks;
+	exports.getCheerioWithPuppeteer = getCheerioWithPuppeteer;
+	exports.getCheerioWithAxios = getCheerioWithAxios;
+	exports.savePageToFile = savePageToFile;
+	exports.saveResourceToFile = saveResourceToFile;
+} else {
+	exports = crawlerFactory;	
+}
+*/
 
-module.exports = crawler;
+exports = crawlerFactory;	
