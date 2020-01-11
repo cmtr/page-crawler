@@ -20,31 +20,32 @@ class UrlFile {
 		return result;
 	}
 
+	static isPagePredicate(pageFormats=[], fileExtension) {
+		return pageFormats.some(format => fileExtension === format);
+	}
+
 	static getFactory(options={}) {
 		
 		const rootDirectory = options.rootDirectory || "";
 		const pageFormats = options.pageFormats || ["html", "php", "asp"];
-		const defaultIndexPageFileName = options.defaultIndexPageFileName || "index";
+		const indexPageFileName = options.indexPageFileName || "index";
 		const pageFileExtension = options.pageFileExtension || "html";
 		const oldProtocal = options.oldProtocal || "http";
 		const oldHost = options.oldHost || "localhost";
 		const newProtocal = options.newProtocal || "http";
 		const newHost = options.newHost || "localhost";
 
-
-		const oldUrlFactory = Url.getFactory(oldProtocal,newHost);
-		
-		const fileFactory = File.getUrlFileFactory(rootDirectory, pageFileExtension, pageFormats, defaultIndexPageFileName);
-
+		const oldUrlFactory = Url.getFactory(oldProtocal, oldHost);
+		const fileFactory = File.getUrlFileFactory(rootDirectory, pageFileExtension, pageFormats, indexPageFileName);
 		const newUrlFactory = Url.getFactory(newProtocal, newHost);
 
 		return function(urlString) {
 			const oldUrl = oldUrlFactory(urlString);
 			const file = fileFactory(oldUrl);
 			const location = UrlFile.modifyLocation(file.location);
-
 			const newUrl = newUrlFactory(`${newProtocal}://${newHost}/${location}${oldUrl.hash.length > 0 ? "#" + oldUrl.hash : ""}`);
-			return new UrlFile(oldUrl, newUrl, file);
+			const isPage = UrlFile.isPagePredicate(pageFormats, file.fileExtension);
+			return new UrlFile(oldUrl, newUrl, file, isPage);
 		}
 	}
 }

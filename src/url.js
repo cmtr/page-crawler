@@ -30,8 +30,10 @@ class Url {
 	}
 
 	static getFullUrl(protocal, host, route="", query="", hash="") {
-		if (typeof protocal !== "string" || typeof host !== "string" || typeof route !== "string" || typeof query !== "string" || typeof hash !== "string" ) 
+		if (typeof protocal !== "string" || typeof host !== "string" || typeof route !== "string" || typeof query !== "string" || typeof hash !== "string" ) {
+			console.log(protocal, host, route, query, hash);
 			throw new Error("Input must be strings");
+		}
 		return `${Url.getUniqueUrl(protocal, host, route, query)}${hash.length > 0 ? "#" + hash : ""}`
 	}
 

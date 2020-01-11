@@ -275,6 +275,48 @@ describe("UrlFile", () => {
 			});
 
 
+			describe("External - Simple case - php", () => {
+				const url = defaultFactory("https://test.com/folder/page.php");
+
+				const result = {
+					oldUrl: {
+						url: "https://test.com/folder/page.php",
+						protocal: "https",
+						host: "test.com",
+						isExternal: true,
+						isIndex: false,
+						route: "folder/page.php",
+						query: "",
+						hash: "",
+						uniqueUrl: "https://test.com/folder/page.php",
+						fullUrl: "https://test.com/folder/page.php"
+					},
+					file: {
+						rootDirectory: "",
+						filePath: ["com", "test","folder"],
+						fileName: "page",
+						fileExtension: "php",
+						location: "./com/test/folder/page.php"
+					},
+					newUrl: {
+						url: "http://localhost/com/test/folder/page.php",
+						protocal: "http",
+						host: "localhost",
+						isExternal: false,
+						isIndex: false,
+						route: "com/test/folder/page.php",
+						query: "",
+						hash: "",
+						uniqueUrl: "http://localhost/com/test/folder/page.php",
+						fullUrl: "http://localhost/com/test/folder/page.php"
+					}
+				};
+
+				testUrlFile(url, result);
+
+			});		
+
+			
 		});
 
 	});
