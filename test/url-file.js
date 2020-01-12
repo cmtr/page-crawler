@@ -1,46 +1,16 @@
+
+
+const Test = require('./util');
+const testUrl = Test.Url;
+const testFile = Test.File;
+const testUrlFile = Test.UrlFile;
+
 const chai = require("chai");
 const { expect } = chai; 
 chai.should();
 
 const UrlFile = require("../src/url-file");
 const { getFactory } = UrlFile;
-
-function testUrl(urlObj, result) {
-	Object
-		.keys(result)
-		.forEach(key => urlObj[key].should.equal(result[key]));
-}
-
-
-
-function testFile(fileObj, resultObj) {
-	Object
-		.keys(resultObj)
-		.forEach(key => {
-			if (Array.isArray(fileObj[key]))
-				fileObj[key].forEach((e, i) => e.should.equal(resultObj[key][i]));
-			else
-				fileObj[key].should.equal(resultObj[key])
-		});
-}
-
-
-function testUrlFile(testObj, resultObj) {
-
-	it("Old Url", () => {
-		testUrl(testObj.oldUrl, resultObj.oldUrl);
-	});
-
-	it("New Url", () => {
-		testUrl(testObj.newUrl, resultObj.newUrl);
-	});
-
-	it("File", () => {
-		testFile(testObj.file, resultObj.file);	
-	});
-	
-}
-
 
 
 describe("UrlFile", () => {
@@ -328,13 +298,13 @@ describe("UrlFile", () => {
 		const rootUrl = "http://localhost:3010";
 		const directory = "cmtr/v1";
 		const options = {
-			depth: 0,
-			transform: true,
-			loadJavaScript: false,
-			pageFileExtension: "html",
-			targetUrl: "http://localhost:4000",
+			rootDirectory: "cmtr/v1",
+			oldHost: "localhost:3010",
+			newHost: "localhost:4000"
 		}
-		const factory = UrlFile.getFactory(rootUrl, directory, options);
+
+
+		const factory = UrlFile.getFactory(options);
 
 		describe('Local - Simple Case', () => {
 
@@ -350,15 +320,16 @@ describe("UrlFile", () => {
 						route: "folder/page",
 						query: "",
 						hash: "",
-						uniqueUrl: "http://localhost/folder/page",
-						fullUrl: "http://localhost/folder/page"
+						uniqueUrl: "http://localhost:3010/folder/page",
+						fullUrl: "http://localhost:3010/folder/page"
 					},
 					file: {
 						rootDirectory: "cmtr/v1",
-						filePath: ["cmtr", "v1","folder"],
+						filePath: ["folder"],
 						fileName: "page",
 						fileExtension: "html",
-						location: "./cmtr/v1/folder/page.html"
+						location: "./cmtr/v1/folder/page.html",
+						rootLocation: "./folder/page.html"
 					},
 					newUrl: {
 						url: "http://localhost:4000/folder/page.html",
@@ -398,13 +369,14 @@ describe("UrlFile", () => {
 					},
 					file: {
 						rootDirectory: "cmtr/v1",
-						filePath: ["cmtr", "v1", "com", "test", "folder"],
+						filePath: [ "com", "test", "folder"],
 						fileName: "page",
 						fileExtension: "html",
-						location: "./cmtr/v1/com/test/folder/page.html"
+						location: "./cmtr/v1/com/test/folder/page.html",
+						rootLocation: "./com/test/folder/page.html"
 					},
 					newUrl: {
-						url: "http://localhost:4000/com/testfolder/page.html",
+						url: "http://localhost:4000/com/test/folder/page.html",
 						protocal: "http",
 						host: "localhost:4000",
 						isExternal: false,

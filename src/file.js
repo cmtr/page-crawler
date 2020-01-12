@@ -8,12 +8,13 @@ const PROTOCOL_SEPERATOR = ":";
 
 class File {
 
-	constructor(rootDirectory="", filePath=[], fileExtension, fileName, location) {
+	constructor(rootDirectory="", filePath=[], fileExtension, fileName, location, rootLocation) {
 		this.rootDirectory = rootDirectory;
 		this.filePath = filePath
 		this.fileExtension = fileExtension;
 		this.fileName = fileName;
 		this.location = location;
+		this.rootLocation = rootLocation;
 	}
 
 }
@@ -28,6 +29,9 @@ File.getFullFilePath = function(rootDirectory="", filePath=[], fileName="", file
 }
 
 
+File.getRootFilePath = function(filePath=[], fileName="", fileExtension="") {
+	return File.getFullFilePath("", filePath, fileName, fileExtension);
+}
 
 File.getFilePathFromRoute = function(route="", defaultExtension="") {
 	if (typeof route !== "string") throw new TypeError("Route must be a string");
@@ -79,7 +83,8 @@ File.getUrlFileFactory = function(rootDirectory="", pageFileExtension="html", pa
 		const route = url.isIndex ? defaultIndexPageFileName : url.route;
 		const fileName = File.getFileNameFromRoute(route, url.query);
 		const location = File.getFullFilePath(rootDirectory, filePath, fileName, fileExtension);
-		return new File(rootDirectory, filePath, fileExtension, fileName, location);
+		const rootLocation = File.getRootFilePath(filePath, fileName, fileExtension);
+		return new File(rootDirectory, filePath, fileExtension, fileName, location, rootLocation);
 	}
 }
 

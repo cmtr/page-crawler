@@ -1,10 +1,8 @@
-const axios = require("axios");
-const puppeteer = require("puppeteer");
-const cheerio = require("cheerio");
-const fs = require("fs");
-const fse = require("fs-extra");
 const UrlFile = require("./url-file");
 const Url = require("./url");
+const { saveResourceToFile, savePageToFile, getCheerioWithAxios, getCheerioWithPuppeteer} = require("./page");
+const { collectHyperlinks, transformHyperlinks } = require('./page-transform');
+const { logFactory } = require('./log');
 
 function crawlerFactory(url, rootDirectory="", options={}) {
 	// Configurations & Defaults
@@ -32,17 +30,16 @@ function crawlerFactory(url, rootDirectory="", options={}) {
 	
 	const hyperlinkConsumer = transform ? transformHyperlinks : collectHyperlinks;
 	const modifier = hyperlinkConsumer(urlFactory);
-	const scraper = loadJavaScript ? getCheerioWithPuppeteer : getCheerioWithAxios; ;
+	const scraper = loadJavaScript ? getCheerioWithPuppeteer : getCheerioWithAxios;
 
 	return getCrawler(
 			savePageToFile(scraper, modifier, savePageToFile), 
 			saveResourceToFile(), 
-			isResourcePredicate(pageFormats),
 			logFactory(url, rootDirectory, Date.now())
 		)(urlFactory(url));
 }
 
-function getCrawler(pageToFile, resourceToFile, isResourcePredicate, toLog) {
+function getCrawler(pageToFile, resourceToFile,  toLog) {
 	console.log("getCrawler called")
 	return async function(url) {
 		
@@ -110,156 +107,7 @@ function getCrawler(pageToFile, resourceToFile, isResourcePredicate, toLog) {
 
 }
 
-function logFactory(url, rootDirectory="", startAt=Date.now()) {
-	return function toLog(completedSet, failureSet) {
-		const completed = [];
-		completedSet.forEach(url => completed.push(url));
-		const failure = [];
-		failureSet.forEach(url => failure.push(url));
-		
-		const log = {
-			failure,
-			completed,
-			url,
-			startAt,
-			finishAt: Date.now()
-		};
 
-		fse.writeJsonSync('./cmtr/log.json', log);
-
-	}
-}
-
-function saveResourceToFile() {
-	return function(current) {
-		console.log("saveResourceToFile");
-		return axios
-			.get(current.oldUrl.uniqueUrl, { responseType: "stream" })
-			.then(response => new Promise((resolve, reject) => {
-				const { location } = current.file;
-				
-				fse.ensureFileSync(location);
-				
-				response.data
-		          .pipe(fs.createWriteStream(location))
-		          .on('finish', () => resolve())
-		          .on('error', error => reject(error));
-			}))
-			.then(() => ({ 
-				success: true, 
-				message: "Successfully save resource",
-				urls: [] 
-			}))
-		}
-}
-
-function savePageToFile(scraper, modifier) {
-	return function(current) {
-		console.log("savePageToFile");
-		const urls = [];
-		return scraper(current)
-			.then(modifier(current, urls))
-			.then(saveCheerioToFile(current))
-			.then(() => ({ 
-				success: true, 
-				message: "Successfully save page",
-				urls
-			}))
-	}
-}
-
-function saveCheerioToFile(url) {
-	if (!(url instanceof UrlFile)) throw new Error("Url must be of class UrlFile.");
-	return function($) {
-		return fse.outputFileSync(url.file.location, $.html());
-	}
-}
-
-
-function getCheerioWithAxios(url) {
-	if (!(url instanceof UrlFile)) throw new Error("Url must be of class UrlFile.");
-	console.log("getCheerioWithAxios");
-	return axios
-		.get(url.oldUrl.uniqueUrl)
-		.then(response => {
-			// console.log(response);
-			return cheerio.load(response.data);
-		});
-}
-
-
-function getCheerioWithPuppeteer(url) {
-	if (!(url instanceof UrlFile)) throw new Error("Url must be of class UrlFile.");
-	console.log("getCheerioWithPuppeteer");
-	return puppeteer
-		.launch()
-		.then(browser => browser.newPage())
-		-then(page => page.goto(url.oldUrl.uniqueUrl))
-		// TODO - await the content
-		.then(page => cheerio.load(page.html()));
-}
-
-
-function collectAttrFactory(urlFactory, $, collection) {
-	return async function(tag, attrKey) {
-		const tags = await $(tag);
-		tags.each(idx => {
-			const orgUrl = tags[idx].attribs[attrKey];
-			if (urlCollectorPrecicate(orgUrl))
-			collection.push(orgUrl);
-		});
-		return collection;
-	}
-}
-
-const urlCollectorPrecicate = e => typeof e === "string" && e.length > 0 && !/^#/.test(e) && !/^mailto:/.test(e);
-
-function collectHyperlinks(urlFactory) {
-	return function(current, urls=[]) {
-		return async function($) {
-			console.log("From collect Hyperlinks");
-			const collectedUrls = [];
-			const getAttr = collectAttrFactory(urlFactory, $, collectedUrls); 
-			getAttr("a", "href");
-			getAttr("script", "src");
-			getAttr("img", "src");
-			getAttr("link", "src");
-			Array.prototype.push.apply(urls, collectedUrls);
-			return $;
-		}
-	}
-}
-
-
-function transformAttrFactory(urlFactory, $, collection) {
-	return function(tag, attrKey) {
-		const tags = $(tag);
-		tags.each(idx => {
-			const orgUrl = tags[idx].attribs[attrKey];
-			if (urlCollectorPrecicate(orgUrl)) {
-				const url = urlFactory(orgUrl);
-				tags[idx].attribs[attrKey] = "/" + url.newUrl.route;
-				collection.push(url);	
-			}
-		})
-	}
-}
-
-function transformHyperlinks(urlFactory) {
-	return function(current, urls=[]) {
-		return function($) {
-			console.log("From transformHyperlinks");
-			const collectedUrls = [];
-			const transfromAttr = transformAttrFactory(urlFactory, $, collectedUrls);
-			transfromAttr("a", "href");
-			transfromAttr("script", "src");
-			transfromAttr("img", "src");
-			transfromAttr("link", "src");
-			Array.prototype.push.apply(urls, collectedUrls);
-			return $;
-		}
-	}
-}
 
 
 function uniqueUrlFactory(...sets) {

@@ -5,20 +5,13 @@ chai.should();
 const Url = require("../src/url");
 const File = require("../src/file");
 
+const Test = require('./util');
+const testFile = Test.File;
+
+
 describe("File", () => {
 
 	describe("Factory", () => {
-
-		function testFile(fileObj, resultObj) {
-			Object
-				.keys(resultObj)
-				.forEach(key => {
-					if (Array.isArray(fileObj[key]))
-						fileObj[key].forEach((e, i) => e.should.equal(resultObj[key][i]));
-					else
-						fileObj[key].should.equal(resultObj[key])
-				});
-		}
 
 		describe("Url as String", () => {
 

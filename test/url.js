@@ -2,18 +2,15 @@ const chai = require("chai");
 const { expect } = chai; 
 chai.should();
 
+const Test = require('./util');
+const testUrl = Test.Url;
+
 const Url = require("../src/url");
 
 describe("Url", () => {
 
 	describe("Factory", () => {
-
-		function testUrl(urlObj, result) {
-			Object
-				.keys(result)
-				.forEach(key => urlObj[key].should.equal(result[key]));
-		}
-
+		
 		describe("Default Factory", () => {
 
 			const factory = Url.getFactory();

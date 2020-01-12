@@ -46,7 +46,7 @@ UrlFile.getFactory = function(options={}) {
 	return function(urlString) {
 		const oldUrl = oldUrlFactory(urlString);
 		const file = fileFactory(oldUrl);
-		const location = UrlFile.modifyLocation(file.location);
+		const location = UrlFile.modifyLocation(file.rootLocation);
 		const newUrl = newUrlFactory(`${newProtocal}://${newHost}/${location}${oldUrl.hash.length > 0 ? "#" + oldUrl.hash : ""}`);
 		const isPage = UrlFile.isPagePredicate(pageFormats, file.fileExtension);
 		// return { oldUrl, newUrl, file, isPage }
