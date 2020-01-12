@@ -45,7 +45,7 @@ function testUrlFile(testObj, resultObj) {
 
 describe("UrlFile", () => {
 
-	describe("Factory", () => {
+	describe("Default Factory", () => {
 
 		const defaultFactory = UrlFile.getFactory();
 
@@ -319,6 +319,108 @@ describe("UrlFile", () => {
 			
 		});
 
+
 	});
+
+
+	describe("Custom configuration", () => {
+		
+		const rootUrl = "http://localhost:3010";
+		const directory = "cmtr/v1";
+		const options = {
+			depth: 0,
+			transform: true,
+			loadJavaScript: false,
+			pageFileExtension: "html",
+			targetUrl: "http://localhost:4000",
+		}
+		const factory = UrlFile.getFactory(rootUrl, directory, options);
+
+		describe('Local - Simple Case', () => {
+
+				const url = factory("/folder/page");
+				
+				const result = {
+					oldUrl: {
+						url: "/folder/page",
+						protocal: "http",
+						host: "localhost:3010",
+						isExternal: false,
+						isIndex: false,
+						route: "folder/page",
+						query: "",
+						hash: "",
+						uniqueUrl: "http://localhost/folder/page",
+						fullUrl: "http://localhost/folder/page"
+					},
+					file: {
+						rootDirectory: "cmtr/v1",
+						filePath: ["cmtr", "v1","folder"],
+						fileName: "page",
+						fileExtension: "html",
+						location: "./cmtr/v1/folder/page.html"
+					},
+					newUrl: {
+						url: "http://localhost:4000/folder/page.html",
+						protocal: "http",
+						host: "localhost:4000",
+						isExternal: false,
+						isIndex: false,
+						route: "folder/page.html",
+						query: "",
+						hash: "",
+						uniqueUrl: "http://localhost:4000/folder/page.html",
+						fullUrl: "http://localhost:4000/folder/page.html"
+					}
+				};
+
+				testUrlFile(url, result);
+
+		});
+
+
+		describe('External - Simple Case', () => {
+
+				const url = factory("https://test.com/folder/page");
+				
+				const result = {
+					oldUrl: {
+						url: "https://test.com/folder/page",
+						protocal: "https",
+						host: "test.com",
+						isExternal: true,
+						isIndex: false,
+						route: "folder/page",
+						query: "",
+						hash: "",
+						uniqueUrl: "https://test.com/folder/page",
+						fullUrl: "https://test.com/folder/page"
+					},
+					file: {
+						rootDirectory: "cmtr/v1",
+						filePath: ["cmtr", "v1", "com", "test", "folder"],
+						fileName: "page",
+						fileExtension: "html",
+						location: "./cmtr/v1/com/test/folder/page.html"
+					},
+					newUrl: {
+						url: "http://localhost:4000/com/testfolder/page.html",
+						protocal: "http",
+						host: "localhost:4000",
+						isExternal: false,
+						isIndex: false,
+						route: "com/test/folder/page.html",
+						query: "",
+						hash: "",
+						uniqueUrl: "http://localhost:4000/com/test/folder/page.html",
+						fullUrl: "http://localhost:4000/com/test/folder/page.html"
+					}
+				};
+
+				testUrlFile(url, result);
+
+		});
+
+	})
 	
 });

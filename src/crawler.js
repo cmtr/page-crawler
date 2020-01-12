@@ -15,8 +15,8 @@ function crawlerFactory(url, rootDirectory="", options={}) {
 	const pageFileExtension = options.pageFileExtension || "html";
 	const indexPageFileName = options.indexPageFileName || "index";
 	const targetUrl = options.targetUrl || "http://localhost:8080";
-	const newRootUrl = Url.getFactory()(targetUrl);
-	const oldRootUrl = Url.getFactory()(url);
+	const defaultProtocol = options.defaultProtocol || "http";
+	const defaultHost = options.defaultHost || "localhost:8080";
 
 	const urlFactory = UrlFile.getFactory({
 		rootDirectory, 
@@ -24,13 +24,12 @@ function crawlerFactory(url, rootDirectory="", options={}) {
 		pageFileExtension,
 		indexPageFileName,
 		pageFileExtension,
-		oldProtocal: oldRootUrl.protocal,
-		oldHost: oldRootUrl.host,
-		newProtocal: newRootUrl.protocal,
-		newHost: newRootUrl.host,
+		oldProtocal: Url.getProtocol(url, defaultProtocol),
+		oldHost: Url.getHost(url, defaultHost),
+		newProtocal: Url.getProtocol(targetUrl, defaultProtocol),
+		newHost: Url.getHost(targetUrl, defaultHost),
 	}); 
 	
-	const urlObj = urlFactory(url);
 	const hyperlinkConsumer = transform ? transformHyperlinks : collectHyperlinks;
 	const modifier = hyperlinkConsumer(urlFactory);
 	const scraper = loadJavaScript ? getCheerioWithPuppeteer : getCheerioWithAxios; ;
@@ -40,7 +39,7 @@ function crawlerFactory(url, rootDirectory="", options={}) {
 			saveResourceToFile(), 
 			isResourcePredicate(pageFormats),
 			logFactory(url, rootDirectory, Date.now())
-		)(urlObj);
+		)(urlFactory(url));
 }
 
 function getCrawler(pageToFile, resourceToFile, isResourcePredicate, toLog) {
@@ -201,65 +200,64 @@ function getCheerioWithPuppeteer(url) {
 }
 
 
-function getAttrFactory($, collection) {
-	return async function(tag, collector) {
+function collectAttrFactory(urlFactory, $, collection) {
+	return async function(tag, attrKey) {
 		const tags = await $(tag);
 		tags.each(idx => {
-			const attr = collector(tags[idx]);
-			collection.push(attr);
+			const orgUrl = tags[idx].attribs[attrKey];
+			if (urlCollectorPrecicate(orgUrl))
+			collection.push(orgUrl);
 		});
 		return collection;
 	}
 }
 
-const hrefCollector = e => e.attribs.href;
-const srcCollector = e => e.attribs.src;
-
+const urlCollectorPrecicate = e => typeof e === "string" && e.length > 0 && !/^#/.test(e) && !/^mailto:/.test(e);
 
 function collectHyperlinks(urlFactory) {
 	return function(current, urls=[]) {
 		return async function($) {
 			console.log("From collect Hyperlinks");
-			const urlStrings = [];
-			const getAttr = getAttrFactory($, urlStrings); 
-
-			await getAttr("a", hrefCollector);
-			await getAttr("script", srcCollector);
-			await getAttr("img", srcCollector);
-			await getAttr("link", srcCollector);
-
-			// find all img-tags
-			const collectedUrls = urlStrings
-				.filter(e => typeof e === "string" && e.length > 0 && !/^#/.test(e) && !/^mailto:/.test(e))
-				.map(urlFactory);
+			const collectedUrls = [];
+			const getAttr = collectAttrFactory(urlFactory, $, collectedUrls); 
+			getAttr("a", "href");
+			getAttr("script", "src");
+			getAttr("img", "src");
+			getAttr("link", "src");
 			Array.prototype.push.apply(urls, collectedUrls);
 			return $;
 		}
 	}
 }
 
+
+function transformAttrFactory(urlFactory, $, collection) {
+	return function(tag, attrKey) {
+		const tags = $(tag);
+		tags.each(idx => {
+			const orgUrl = tags[idx].attribs[attrKey];
+			if (urlCollectorPrecicate(orgUrl)) {
+				const url = urlFactory(orgUrl);
+				tags[idx].attribs[attrKey] = "/" + url.newUrl.route;
+				collection.push(url);	
+			}
+		})
+	}
+}
 
 function transformHyperlinks(urlFactory) {
 	return function(current, urls=[]) {
 		return function($) {
-			const urlStrings = [];
 			console.log("From transformHyperlinks");
-			// modify all isPage & !isHtml => isHtml
-			// find all a-tags
-			// find all script-tags
-			// find all link-tags
-			// find all img-tags
-			// add to urls
-			const collectedUrls = urlStrings.map(urlFactory);
+			const collectedUrls = [];
+			const transfromAttr = transformAttrFactory(urlFactory, $, collectedUrls);
+			transfromAttr("a", "href");
+			transfromAttr("script", "src");
+			transfromAttr("img", "src");
+			transfromAttr("link", "src");
 			Array.prototype.push.apply(urls, collectedUrls);
 			return $;
 		}
-	}
-}
-
-function isResourcePredicate(pageFormats=[]) {
-	return function(url) {
-		return !pageFormats.some(extension => extension === url.file.fileExtension);
 	}
 }
 
@@ -271,18 +269,5 @@ function uniqueUrlFactory(...sets) {
 	}
 }
 
-
-/*
-if (process.env.NODE_ENV === "test") {
-	crawlerFactory.isResourcePredicate = isResourcePredicate;
-	crawlerFactory.uniqueUrlFactory = uniqueUrlFactory;
-	crawlerFactory.transformHyperlinks = transformHyperlinks;
-	crawlerFactory.collectHyperlinks = collectHyperlinks;
-	crawlerFactory.getCheerioWithPuppeteer = getCheerioWithPuppeteer;
-	crawlerFactory.getCheerioWithAxios = getCheerioWithAxios;
-	crawlerFactory.savePageToFile = savePageToFile;
-	crawlerFactory.saveResourceToFile = saveResourceToFile;
-} 
-*/
 
 module.exports = crawlerFactory;

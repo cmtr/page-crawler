@@ -254,6 +254,11 @@ describe("Url", () => {
 			getHost("http://test.com/page/page.test.html?v=234#afg.sdf").should.equal("test.com");
 		});
 
+
+		it("Localhost", () => {
+			getHost("http://localhost:3000/page", "localhost").should.equal("localhost:3000");
+		})
+
 		it("Expect non-string to throw", () => {
 			expect(getHost.bind({}, {})).to.throw();
 			expect(getHost.bind({}, 1)).to.throw();
