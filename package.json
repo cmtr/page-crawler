@@ -1,5 +1,5 @@
 {
-  "name": "static-page-generator",
+  "name": "page-crawler",
   "version": "0.0.0",
   "description": "",
   "main": "index.js",
@@ -9,14 +9,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/cmtr/static-page-generator.git"
+    "url": "git+https://github.com/cmtr/page-crawler.git"
   },
   "author": "Harald Blikø",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/cmtr/static-page-generator/issues"
+    "url": "https://github.com/cmtr/page-crawler/issues"
   },
-  "homepage": "https://github.com/cmtr/static-page-generator#readme",
+  "homepage": "https://github.com/cmtr/page-crawler#readme",
   "devDependencies": {
     "chai": "^4.2.0",
     "mocha": "^6.2.2"
