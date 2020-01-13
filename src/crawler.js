@@ -33,7 +33,7 @@ function crawlerFactory(url, rootDirectory="", options={}) {
 	const scraper = loadJavaScript ? getCheerioWithPuppeteer : getCheerioWithAxios;
 
 	return getCrawler(
-			savePageToFile(scraper, modifier, savePageToFile), 
+			savePageToFile(scraper, modifier), 
 			saveResourceToFile(), 
 			logFactory(url, rootDirectory, Date.now())
 		)(urlFactory(url));
@@ -96,7 +96,12 @@ function getCrawler(pageToFile, resourceToFile,  toLog) {
 						current.attempted = Date.now();
 						current.message = failure.message;
 						// TODO - add message
-						console.log("Failure ")
+					console.log(`Failed to saved ${current.oldUrl.uniqueUrl}
+						\n\tError message: ${failure.message}
+						\n\tTo file: ${current.file.location}
+						\n\tNew url: ${current.newUrl.uniqueUrl}
+						\nCompleted: ${completed.size}\tFailures: ${failures.size}\tRemaining: ${queue.length}`
+					);
 					}
 				});
 		}
@@ -113,6 +118,7 @@ function getCrawler(pageToFile, resourceToFile,  toLog) {
 function uniqueUrlFactory(...sets) {
 	if (!sets.every(set => set instanceof Set)) throw new TypeError("All arguments must be of class Set.");
 	return function(url) {
+		if (!(url instanceof UrlFile)) throw new Error("Url must be of class UrlFile.");
 		return !sets.some(set => set.has(url.oldUrl.uniqueUrl));
 	}
 }

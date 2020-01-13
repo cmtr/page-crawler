@@ -11,7 +11,7 @@ const Page = {};
 
 Page.saveResourceToFile = function() {
 	return function(current) {
-		console.log("saveResourceToFile");
+		if (!(current instanceof UrlFile)) throw new Error("Url must be of class UrlFile.");
 		return axios
 			.get(current.oldUrl.uniqueUrl, { responseType: "stream" })
 			.then(response => new Promise((resolve, reject) => {
@@ -35,11 +35,11 @@ Page.saveResourceToFile = function() {
 
 Page.savePageToFile = function(scraper, modifier) {
 	return function(current) {
-		console.log("savePageToFile");
+		if (!(current instanceof UrlFile)) throw new Error("Url must be of class UrlFile.");
 		const urls = [];
 		return scraper(current)
 			.then(modifier(current, urls))
-			.then(Page.saveCheerioToFile(current))
+			.then(Page.saveCheerioToFile(current.file.location))
 			.then(() => ({ 
 				success: true, 
 				message: "Successfully save page",
@@ -48,29 +48,22 @@ Page.savePageToFile = function(scraper, modifier) {
 	}
 }
 
-Page.saveCheerioToFile = function(url) {
-	if (!(url instanceof UrlFile)) throw new Error("Url must be of class UrlFile.");
+Page.saveCheerioToFile = function(location) {
 	return function($) {
-		return fse.outputFileSync(url.file.location, $.html());
+		return fse.outputFileSync(location, $.html());
 	}
 }
 
 
 Page.getCheerioWithAxios = function(url) {
 	if (!(url instanceof UrlFile)) throw new Error("Url must be of class UrlFile.");
-	console.log("getCheerioWithAxios");
 	return axios
 		.get(url.oldUrl.uniqueUrl)
-		.then(response => {
-			// console.log(response);
-			return cheerio.load(response.data);
-		});
+		.then(response => cheerio.load(response.data));
 }
-
 
 Page.getCheerioWithPuppeteer = function(url) {
 	if (!(url instanceof UrlFile)) throw new Error("Url must be of class UrlFile.");
-	console.log("getCheerioWithPuppeteer");
 	return puppeteer
 		.launch()
 		.then(browser => browser.newPage())

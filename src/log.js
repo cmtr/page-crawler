@@ -2,7 +2,8 @@ const fse = require("fs-extra");
 
 const Log = {};
 
-Log.logFactory(url, rootDirectory="", startAt=Date.now()) {
+Log.logFactory = function(url, rootDirectory="") {
+	const startAt = Date.now();
 	return function toLog(completedSet, failureSet) {
 		const completed = [];
 		completedSet.forEach(url => completed.push(url));
