@@ -7,11 +7,14 @@ const Crawler = require("./src/crawler");
 
 console.log("Start static page generator");
 
-const args = minimist(process.argv/*.slice(2)*/);
+// const args = minimist(process.argv/*.slice(2)*/);
 
-const rootUrl = "localhost:3010";
+const rootUrl = "localhost:3000";
 
-Crawler("http://" + rootUrl, "./copy");
+Crawler("http://" + rootUrl, "./copy", { 
+	transform: true,
+	defaultHost: 'localhost:3000'
+});
 
 module.exports = {
 	Crawler, File, UrlFile, Url

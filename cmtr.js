@@ -1,14 +1,14 @@
 const crawlerFactory = require('./src/crawler');
 
 
-const rootUrl = "http://localhost:3010";
+const rootUrl = "http://localhost:3000";
 const directory = "cmtr/v1";
 const options = {
 	depth: 0,
 	transform: true,
 	loadJavaScript: false,
 	pageFileExtension: "html",
-	targetUrl: "http://localhost:4000",
+	// targetUrl: "http://localhost:4000"
 }
 
 crawlerFactory(rootUrl, directory, options);

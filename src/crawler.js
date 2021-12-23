@@ -12,9 +12,9 @@ function crawlerFactory(url, rootDirectory="", options={}) {
 	const pageFormats = options.pageFormats || ["html", "php", "asp"];
 	const pageFileExtension = options.pageFileExtension || "html";
 	const indexPageFileName = options.indexPageFileName || "index";
-	const targetUrl = options.targetUrl || "http://localhost:8080";
+	const targetUrl = options.targetUrl || "http://localhost:3000";
 	const defaultProtocol = options.defaultProtocol || "http";
-	const defaultHost = options.defaultHost || "localhost:8080";
+	const defaultHost = options.defaultHost || "localhost:3000";
 
 	const urlFactory = UrlFile.getFactory({
 		rootDirectory, 

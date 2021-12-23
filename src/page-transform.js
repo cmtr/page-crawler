@@ -9,7 +9,7 @@ const DEFAULT_TAG_KEY_PAIRS = [
 	{ tag: "img", key: "src" },
 ];
 
-PageTransform.modifyFactory = function(tagKeysPairs=[], modiferFunction, collectorPredicate=alwaysTrue) {
+PageTransform.modifyFactory = function(tagKeysPairs=[], modiferFunction, collectorPredicate=PageTransform.urlCollectorPrecicate) {
 	return function(urlFactory) {
 		return function(current, urls=[]) {
 			return async function($) {
@@ -46,7 +46,9 @@ PageTransform.collectAndTransformHyperlinksModifier = function(collectorPredicat
 			const orgUrl = tags[idx].attribs[key];
 			if (collectorPredicate(orgUrl)) {
 				const url = urlFactory(orgUrl);
-				tags[idx].attribs[key] = "/" + url.newUrl.route;
+				tags[idx].attribs[key] = url.oldUrl.host === url.newUrl.host
+					? "/" + url.newUrl.route
+					: url.oldUrl.url;
 				collection.push(url);	
 			}
 		});
@@ -59,12 +61,23 @@ PageTransform.urlCollectorPrecicate = function(e) {
 	return 	typeof e === "string" && 
 			e.length > 0 && 
 			!/^#/.test(e) && 
-			!/^mailto:/.test(e);	
+			!/^mailto:/.test(e) &&
+			!/^http`/.test(e);	
 };
 
 
-PageTransform.transformHyperlinks = PageTransform.modifyFactory(DEFAULT_TAG_KEY_PAIRS, PageTransform.collectAndTransformHyperlinksModifier, PageTransform.urlCollectorPrecicate);
-PageTransform.collectHyperlinks = PageTransform.modifyFactory(DEFAULT_TAG_KEY_PAIRS, PageTransform.collectHyperlinksModifier, PageTransform.urlCollectorPrecicate);
+PageTransform.transformHyperlinks = PageTransform
+	.modifyFactory(
+		DEFAULT_TAG_KEY_PAIRS, 
+		PageTransform.collectAndTransformHyperlinksModifier, 
+		PageTransform.urlCollectorPrecicate
+	);
+PageTransform.collectHyperlinks = PageTransform
+	.modifyFactory(
+		DEFAULT_TAG_KEY_PAIRS, 
+		PageTransform.collectHyperlinksModifier, 
+		PageTransform.urlCollectorPrecicate
+);
 
 
 function flatMap(acc, curr) {
