@@ -46,9 +46,8 @@ PageTransform.collectAndTransformHyperlinksModifier = function(collectorPredicat
 			const orgUrl = tags[idx].attribs[key];
 			if (collectorPredicate(orgUrl)) {
 				const url = urlFactory(orgUrl);
-				tags[idx].attribs[key] = url.oldUrl.host === url.newUrl.host
-					? "/" + url.newUrl.route
-					: url.oldUrl.url;
+				tags[idx].attribs[key] = url.oldUrl.host === url.newUrl.host ? "/" + url.newUrl.route : url.oldUrl.url;
+				// tags[idx].attribs[key] = url.oldUrl.url;
 				collection.push(url);	
 			}
 		});
@@ -58,11 +57,12 @@ PageTransform.collectAndTransformHyperlinksModifier = function(collectorPredicat
 
 
 PageTransform.urlCollectorPrecicate = function(e) {
-	return 	typeof e === "string" && 
-			e.length > 0 && 
-			!/^#/.test(e) && 
-			!/^mailto:/.test(e) &&
-			!/^http`/.test(e);	
+	return typeof e === "string" && 
+		e.length > 0 && 
+		!/^#/.test(e) && 
+		!/^mailto:/.test(e) &&
+		!/^http:/.test(e) &&
+		!/^https:/.test(e);
 };
 
 

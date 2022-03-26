@@ -18,7 +18,7 @@ Log.logFactory = function(url, rootDirectory="") {
 			finishAt: Date.now()
 		};
 
-		fse.writeJsonSync('./cmtr/log.json', log);
+		fse.writeJsonSync(rootDirectory + '/log.json', log);
 
 	}
 }
